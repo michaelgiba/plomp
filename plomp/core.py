@@ -109,7 +109,7 @@ class PlompBuffer:
         self._calls.append((call_time, invoked_call))
         return PlompCallHandle(self, insert_index)
 
-    def record_completion(self, invoked_call_index: str, response: str):
+    def record_completion(self, invoked_call_index: int, response: str):
         self._calls[invoked_call_index][1].complete(self.timestamp_fn(), response)
 
     def __iter__(self) -> Iterator[PlompBufferItem]:

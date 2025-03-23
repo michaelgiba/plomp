@@ -23,14 +23,14 @@ def buffer(*, key: str | None = None) -> PlompBuffer:
 
 def record_prompt(
     prompt: str,
-    tags: list[str | dict] | None = None,
+    tags: TagsType | None = None,
     *,
-    buffer: str | None = None,
+    buffer: PlompBuffer | None = None,
 ) -> PlompCallHandle:
     if buffer is None:
         buffer = _shared_plomp_buffer(None)
 
-    return buffer.record_invocation(prompt=prompt, tags=tags)
+    return buffer.record_invocation(prompt=prompt, tags=tags or dict())
 
 
 def render(buffer: PlompBuffer, write_to: io.IOBase):
