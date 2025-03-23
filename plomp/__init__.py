@@ -6,6 +6,7 @@ from typing import Callable
 
 from plomp.core import (PlompBuffer, PlompCallCompletion, PlompCallHandle,
                         PlompCallTrace, TagsType)
+from plomp.serve import write_html
 
 
 class PlompMisconfiguration(Exception):
@@ -30,7 +31,19 @@ def record_prompt(
     if buffer is None:
         buffer = _shared_plomp_buffer(None)
 
-    return buffer.record_invocation(prompt=prompt, tags=tags or dict())
+    return buffer.record_prompt_start(prompt=prompt, tags=tags or dict())
+
+
+def record_event(
+    payload: dict,
+    tags: TagsType | None = None,
+    *,
+    buffer: PlompBuffer | None = None,
+) -> PlompCallHandle:
+    if buffer is None:
+        buffer = _shared_plomp_buffer(None)
+
+    return buffer.record_event(payload=payload, tags=tags or dict())
 
 
 def render(buffer: PlompBuffer, write_to: io.IOBase):

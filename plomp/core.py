@@ -1,12 +1,14 @@
 import datetime as dt
 import io
+import json
 from copy import deepcopy
 from dataclasses import dataclass
-from functools import wraps
-from typing import Callable, Iterator
+from enum import Enum, auto
+from typing import Callable, Iterator, Literal
 
 TagType = str | dict
 TagsType = dict[str, TagType]
+TagsFilter = dict[str, list[TagType] | TagType]
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)
@@ -14,23 +16,26 @@ class PlompCallCompletion:
     completion_timestamp: dt.datetime
     response: str
 
+    def to_dict(self) -> dict:
+        return {
+            "completion_timestamp": self.completion_timestamp.isoformat(),
+            "response": self.response,
+        }
+
 
 @dataclass(slots=True, kw_only=True)
 class PlompCallTrace:
 
     prompt: str
-    tags: TagsType
     completion: PlompCallCompletion | None = None
 
     def __init__(
         self,
         prompt: str,
-        tags: TagsType,
         *,
         completion: PlompCallCompletion | None = None,
     ):
         self.prompt = prompt
-        self.tags = deepcopy(tags)
         self.completion = completion
 
     def complete(self, completion_timestamp: dt.datetime, response: str):
@@ -42,19 +47,14 @@ class PlompCallTrace:
             response=response,
         )
 
-    def __repr__(self):
-        cn = self.__class__.__name__
-        parts = [
-            f"prompt='{self.prompt!r}'",
-            f"tags={self.tags!r}",
-            f"completion={self.completion!r}",
-        ]
-
-        parts_string = ", ".join(parts)
-        return f"{cn}({parts_string})"
-
     def render(self, io: io.IOBase, *, indent: int = 0):
         io.write(indent * " " + repr(self))
+
+    def to_dict(self) -> str:
+        return {
+            "prompt": self.prompt,
+            "completion": self.completion.to_dict() if self.completion else None,
+        }
 
 
 class PlompCallHandle:
@@ -64,29 +64,62 @@ class PlompCallHandle:
         self.index = index
 
     def complete(self, response: str):
-        self.buffer.record_completion(self.index, response)
+        self.buffer.record_prompt_completion(self.index, response)
 
 
-class PlompBufferItem:
-
-    def __init__(
-        self, timestamp: dt.datetime, seq_number: int, call_trace: PlompCallTrace
-    ):
-        self.timestamp = timestamp
-        self.seq_number = seq_number
-        self.call_trace = call_trace
-
-    def __repr__(self):
-        parts = [
-            f"timestamp={self.timestamp!r}",
-            f"seq_number={self.seq_number!r}",
-            f"call_trace={self.call_trace!r}",
-        ]
-        args = ", ".join(parts)
-        return f"{self.__class__.__name__}({args})"
+@dataclass(slots=True, kw_only=True)
+class PlompEvent:
+    payload: dict
 
     def render(self, io: io.IOBase, *, indent: int = 0):
         io.write(indent * " " + repr(self))
+
+    def to_dict(self) -> str:
+        return {"payload": self.payload}
+
+
+class PlompBufferItemType(Enum):
+    PROMPT = "prompt"
+    EVENT = "event"
+
+
+@dataclass
+class PlompBufferItem:
+    timestamp: dt.datetime
+    tags: TagsType
+    type_: PlompBufferItemType
+    _data: PlompCallTrace | PlompEvent
+
+    @property
+    def call_trace(self) -> PlompCallTrace:
+        if self.type_ != PlompBufferItemType.PROMPT:
+            raise ValueError("Item is not a prompt request")
+        return self._data
+
+    @property
+    def event(self) -> PlompEvent:
+        if self.type_ != PlompBufferItemType.EVENT:
+            raise ValueError("Item is not an event")
+        return self._data
+
+    def render(self, io: io.IOBase, *, indent: int = 0):
+        io.write(indent * " " + self.__class__.__name__ + "(\n")
+        io.write((indent + 1) * " " + f"timestamp={repr(self.timestamp)},\n")
+        io.write((indent + 1) * " " + f"tags={repr(self.tags)},\n")
+        io.write((indent + 1) * " " + f"type_={repr(self.type_)},\n")
+        io.write((indent + 1) * " " + "_data=(\n")
+        self._data.render(io, indent=indent + 2)
+        io.write("\n")
+        io.write((indent + 1) * " " + ")\n")
+        io.write(indent * " " + ")")
+
+    def to_dict(self) -> str:
+        return {
+            "timestamp": self.timestamp.isoformat(),
+            "tags": self.tags,
+            "type": self.type_.value,
+            "data": self._data.to_dict(),
+        }
 
 
 class PlompBuffer:
@@ -94,53 +127,137 @@ class PlompBuffer:
     def __init__(
         self,
         *,
-        calls: list[tuple[dt.datetime, PlompCallTrace]] | None = None,
+        buffer_items: list[PlompBufferItem] | None = None,
         timestamp_fn: Callable[[], dt.datetime] = dt.datetime.now,
         key: str | None = None,
     ):
         self.timestamp_fn = timestamp_fn
         self.key = key
-        self._calls = [deepcopy(call) for call in (calls or [])]
+        self._buffer_items = [
+            deepcopy(buffer_item) for buffer_item in (buffer_items or [])
+        ]
 
-    def record_invocation(self, *, prompt: str, tags: TagsType) -> PlompCallHandle:
-        call_time = self.timestamp_fn()
-        invoked_call = PlompCallTrace(prompt, tags)
-        insert_index = len(self._calls)
-        self._calls.append((call_time, invoked_call))
+    def record_prompt_start(self, *, prompt: str, tags: TagsType) -> PlompCallHandle:
+        insert_index = len(self._buffer_items)
+        self._buffer_items.append(
+            PlompBufferItem(
+                self.timestamp_fn(),
+                tags,
+                PlompBufferItemType.PROMPT,
+                PlompCallTrace(prompt),
+            )
+        )
         return PlompCallHandle(self, insert_index)
 
-    def record_completion(self, invoked_call_index: int, response: str):
-        self._calls[invoked_call_index][1].complete(self.timestamp_fn(), response)
+    def record_prompt_completion(self, call_index: int, response: str):
+        if self._buffer_items[call_index].type_ != PlompBufferItemType.PROMPT:
+            raise ValueError("Item at index is not a prompt request")
 
-    def __iter__(self) -> Iterator[PlompBufferItem]:
-        for index, (call_time, call_trace) in enumerate(self._calls):
-            yield PlompBufferItem(call_time, index, deepcopy(call_trace))
-
-    def filter(self, *, tags: list) -> "PlompBuffer":
-        filtered_calls = []
-        for call_time, call in self._calls:
-            if any(tag in call.tags for tag in tags):
-                filtered_calls.append((call_time, call))
-        return PlompBuffer(calls=filtered_calls, key=self.key)
-
-    def first(self, size: int = 1) -> "PlompBuffer":
-        """Return the first 'size' items from the buffer."""
-        return PlompBuffer(calls=self._calls[:size], key=self.key)
-
-    def last(self, size: int = 1) -> "PlompBuffer":
-        """Return the last 'size' items from the buffer."""
-        return PlompBuffer(calls=self._calls[-size:], key=self.key)
-
-    def window(self, start: int, end: int) -> "PlompBuffer":
-        """Return items from index 'start' (inclusive) to 'end' (exclusive)."""
-        return PlompBuffer(calls=self._calls[start:end], key=self.key)
-
-    def __getitem__(self, index: int) -> PlompBufferItem:
-        if index < 0:
-            index += len(self._calls)
-        return PlompBufferItem(
-            self._calls[index][0], index, deepcopy(self._calls[index][1])
+        self._buffer_items[call_index].call_trace.complete(
+            self.timestamp_fn(), response
         )
 
+    def record_event(self, *, payload: dict, tags: TagsType):
+        event_time = self.timestamp_fn()
+        self._buffer_items.append(
+            PlompBufferItem(
+                event_time, tags, PlompBufferItemType.EVENT, PlompEvent(payload=payload)
+            )
+        )
+
+    def __iter__(self) -> Iterator[PlompBufferItem]:
+        for buffer_item in self._buffer_items:
+            yield deepcopy(buffer_item)
+
+    def where(
+        self,
+        *,
+        truth_fn: Callable[[PlompBufferItem], bool],
+    ) -> "PlompBuffer":
+        """Filter buffer items based on a truth function."""
+        filtered_buffer = []
+        for buffer_item in self._buffer_items:
+            if truth_fn(buffer_item):
+                filtered_buffer.append(buffer_item)
+        return PlompBuffer(buffer_items=filtered_buffer, key=self.key)
+
+    def filter(
+        self,
+        *,
+        how: Literal["any"] | Literal["all"] | Literal["none"] = "any",
+        tags_filter: TagsFilter,
+    ) -> "PlompBuffer":
+
+        def _normalize_tag_filter(tags_filter: TagsFilter) -> TagsFilter:
+            return {
+                tag_key: tag_value if isinstance(tag_value, list) else [tag_value]
+                for tag_key, tag_value in tags_filter.items()
+            }
+
+        def _tags_match_filter(
+            filter_tag_key: str,
+            filter_tag_values: list[TagType],
+            tags: TagsType,
+        ) -> bool:
+            return filter_tag_key in tags and tags[filter_tag_key] in filter_tag_values
+
+        tags_filter = _normalize_tag_filter(tags_filter)
+
+        if how == "any":
+            return self.where(
+                truth_fn=lambda buffer_item: any(
+                    _tags_match_filter(
+                        filter_tag_key, filter_tag_values, buffer_item.tags
+                    )
+                    for filter_tag_key, filter_tag_values in tags_filter.items()
+                )
+            )
+        elif how == "all":
+            return self.where(
+                truth_fn=lambda buffer_item: all(
+                    _tags_match_filter(
+                        filter_tag_key, filter_tag_values, buffer_item.tags
+                    )
+                    for filter_tag_key, filter_tag_values in tags_filter.items()
+                )
+            )
+        elif how == "none":
+            return self.where(
+                truth_fn=lambda buffer_item: not any(
+                    _tags_match_filter(
+                        filter_tag_key, filter_tag_values, buffer_item.tags
+                    )
+                    for filter_tag_key, filter_tag_values in tags_filter.items()
+                )
+            )
+        else:
+            raise ValueError(f"Invalid filter method: {how}")
+
+    def _filter_all(self, tags: TagType) -> "PlompBuffer":
+        """Filter buffer items that contain all of the specified tags."""
+        return self.where(
+            truth_fn=lambda buffer_item: all(tag in buffer_item.tags for tag in tags)
+        )
+
+    def first(self, size: int = 1) -> "PlompBuffer":
+        return PlompBuffer(buffer_items=self._buffer_items[:size], key=self.key)
+
+    def last(self, size: int = 1) -> "PlompBuffer":
+        return PlompBuffer(buffer_items=self._buffer_items[-size:], key=self.key)
+
+    def window(self, start: int, end: int) -> "PlompBuffer":
+        return PlompBuffer(buffer_items=self._buffer_items[start:end], key=self.key)
+
+    def __getitem__(self, index: int) -> PlompBufferItem:
+        return self._buffer_items[index]
+
     def __len__(self) -> int:
-        return len(self._calls)
+        return len(self._buffer_items)
+
+    def to_dict(self) -> str:
+        return {
+            "key": self.key,
+            "buffer_items": [
+                buffer_item.to_dict() for buffer_item in self._buffer_items
+            ],
+        }
