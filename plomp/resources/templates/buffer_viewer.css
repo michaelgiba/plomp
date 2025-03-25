@@ -1,0 +1,117 @@
+Extract all CSS styling from buffer_viewer.html into this file
+body {
+    margin: 0;
+    font-family: sans-serif;
+    background-color: #fafafa;
+    color: #333;
+}
+#container {
+    margin: 0 auto;
+    padding: 8px;
+    width: 100%;
+    max-width: 1200px;
+}
+.controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px;
+    border-bottom: 1px solid #ccc;
+}
+.data-view {
+    min-height: 400px;
+    border: 1px solid #ccc;
+    overflow: auto;
+    padding: 8px;
+    position: relative;
+}
+#timeline-view {
+    position: relative;
+    max-height: 600px;
+    overflow-y: auto;
+}
+.timeline-item {
+    cursor: pointer;
+}
+.timeline-item:hover rect {
+    fill: #555;
+}
+.timeline-tooltip {
+    position: absolute;
+    background-color: #f3f3f3;
+    border: 1px solid #aaa;
+    border-radius: 3px;
+    padding: 4px 6px;
+    font-size: 12px;
+    pointer-events: none;
+    max-width: 300px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    display: none;
+}
+.timeline-tooltip pre {
+    margin: 4px 0;
+    max-height: 150px;
+    overflow: auto;
+}
+.timeline-details {
+    margin-top: 8px;
+    border: 1px solid #ccc;
+    padding: 8px;
+    background: #fff;
+}
+.filter-section {
+    padding: 8px;
+    border-top: 1px solid #ccc;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start; /* Changed from center to flex-start */
+    flex-wrap: wrap; /* Allow the section to wrap if needed */
+}
+.tag-filters {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap; /* Allow tags to wrap to next line */
+    max-width: 80%; /* Ensure tags don't push beyond reasonable width */
+}
+.tag-filter {
+    background: #e2e2e2;
+    border-radius: 3px;
+    font-size: 12px;
+    padding: 2px 6px;
+    cursor: pointer;
+}
+.tag-filter.active {
+    background: #4da3ff;
+    color: #fff;
+}        
+/* Sidebar for details (always visible) */
+.details-sidebar {
+    position: absolute;
+    right: 0;
+    top: 0;
+    font-size: 10px;
+    width: 400px;
+    height: 100%;
+    background: #fff;
+    border-left: 1px solid #ccc;
+    box-sizing: border-box;
+    padding: 8px;
+    overflow-y: auto;
+    display: none; /* hidden by default */
+}
+svg {
+    margin-top: 4px;
+}
+.loading-indicator {
+    display: none;
+    text-align: center;
+    font-size: 12px;
+    padding: 6px;
+    color: #444;
+}
+.stats-section {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}

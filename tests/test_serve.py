@@ -3,6 +3,8 @@ import io
 import json
 import sys
 import textwrap
+import random
+from datetime import datetime, timedelta
 
 import pytest
 
@@ -11,66 +13,143 @@ import plomp
 
 def test_serialization():
     buffer = plomp.buffer(key="test_serialization")
-    type_data_and_tags = [
-        (
-            "prompt",
-            {
-                "data": {
-                    "prompt": "What would you like to say to bob?",
-                    "response": "Hello?",
-                },
-                "tags": {"model": "claude"},
-            },
-        ),
-        (
-            "event",
-            {
-                "data": {
-                    "message": "Hello?",
-                    "from": "bob",
-                    "to": "alice",
-                },
-                "tags": {"event_type": "chat"},
-            },
-        ),
-        (
-            "prompt",
-            {
-                "data": {
-                    "prompt": textwrap.dedent(
-                        """
-                        You have recieved a message from bob saying 'Hello?'. How would you like to respond?
-                    """
-                    ),
-                    "response": "Hi there",
-                },
-                "tags": {"model": "claude"},
-            },
-        ),
-        (
-            "event",
-            {
-                "data": {
-                    "message": "Hello?",
-                    "from": "alice",
-                    "to": "bob",
-                },
-                "tags": {"event_type": "chat"},
-            },
-        ),
+
+    # Base data templates
+    prompt_templates = [
+        "What would you like to say to {recipient}?",
+        "How would you respond to {recipient}'s message?",
+        "Write a message to {recipient} about {topic}",
+        "Compose a {tone} response to {recipient}",
+        "Help me draft a message to {recipient} regarding {topic}",
     ]
 
-    for type_, data_and_tags in type_data_and_tags:
-        if type_ == "prompt":
-            prompt = data_and_tags["data"]["prompt"]
-            response = data_and_tags["data"]["response"]
-            tags = data_and_tags["tags"]
-            plomp.record_prompt(prompt, tags=tags, buffer=buffer).complete(response)
-        elif type_ == "event":
-            payload = data_and_tags["data"]
-            tags = data_and_tags["tags"]
+    topics = [
+        "the project",
+        "yesterday's meeting",
+        "next week's deadline",
+        "the budget",
+        "team collaboration",
+        "vacation plans",
+        "quarterly review",
+        "new product launch",
+        "client feedback",
+        "internal process",
+        "system upgrade",
+        "staff training",
+        "market research",
+        "customer support",
+        "strategic planning",
+        "resource allocation",
+        "website redesign",
+        "sales strategy",
+    ]
+
+    tones = [
+        "formal",
+        "casual",
+        "friendly",
+        "serious",
+        "urgent",
+        "humorous",
+        "professional",
+        "enthusiastic",
+        "concerned",
+        "apologetic",
+        "grateful",
+        "direct",
+        "diplomatic",
+        "supportive",
+        "inquisitive",
+    ]
+
+    names = [
+        "alice",
+        "bob",
+        "charlie",
+        "diana",
+        "evan",
+        "fiona",
+        "greg",
+        "hannah",
+        "ian",
+        "julia",
+        "kevin",
+        "lisa",
+        "michael",
+        "natalie",
+        "olivia",
+        "paul",
+        "quinn",
+        "rachel",
+        "samuel",
+        "tina",
+        "victor",
+        "wendy",
+    ]
+
+    models = [
+        "claude",
+        "gpt4",
+        "llama",
+        "mistral",
+        "gemini",
+        "palm",
+        "bert",
+        "falcon",
+        "davinci",
+        "chinchilla",
+        "bloom",
+        "pythia",
+        "baichuan",
+        "qwen",
+        "yi",
+    ]
+
+    for i in range(2000):
+        entry_type = random.choice(["prompt", "event"])
+
+        if entry_type == "prompt":
+            recipient = random.choice(names)
+            topic = random.choice(topics)
+            tone = random.choice(tones)
+            model = random.choice(models)
+
+            prompt = random.choice(prompt_templates).format(
+                recipient=recipient, topic=topic, tone=tone
+            )
+
+            # Sometimes include a response
+            response = (
+                f"Here's a {tone} message about {topic}"
+                if random.random() > 0.3
+                else None
+            )
+
+            tags = {"model": model}
+            if random.random() > 0.7:
+                tags["importance"] = random.choice(["low", "medium", "high"])
+
+            handle = plomp.record_prompt(prompt, tags=tags, buffer=buffer)
+            if response:
+                handle.complete(response)
+
+        else:  # event
+            sender = random.choice(names)
+            recipient = random.choice([n for n in names if n != sender])
+
+            payload = {
+                "message": f"Message {i} about {random.choice(topics)}",
+                "from": sender,
+                "to": recipient,
+                "timestamp": (
+                    datetime.now() - timedelta(minutes=random.randint(0, 1000))
+                ).isoformat(),
+            }
+
+            tags = {
+                "event_type": random.choice(["chat", "notification", "system", "alert"])
+            }
+
             plomp.record_event(payload, tags=tags, buffer=buffer)
-        else:
-            raise ValueError(f"Unknown type: {type_}")
 
     plomp.write_html(buffer, "/home/michaelgiba/out.html")

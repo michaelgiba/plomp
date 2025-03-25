@@ -4,8 +4,13 @@ import textwrap
 from functools import cache, partial, wraps
 from typing import Callable
 
-from plomp.core import (PlompBuffer, PlompCallCompletion, PlompCallHandle,
-                        PlompCallTrace, TagsType)
+from plomp.core import (
+    PlompBuffer,
+    PlompCallCompletion,
+    PlompCallHandle,
+    PlompCallTrace,
+    TagsType,
+)
 from plomp.serve import write_html
 
 
