@@ -1,6 +1,4 @@
 import datetime as dt
-import io
-import sys
 
 import pytest
 
@@ -12,7 +10,7 @@ def test_manual_traces():
     prompt_response_and_tags = [
         ("What is 1 + 1", "2", {"math": True}),
         ("What is 2 + 1", "3", {"math": True}),
-        ("What is 3 + 1", "5", {"math": True, "hard": True}),
+        ("What is 3 + 1", "4", {"math": True, "hard": True}),
     ]
     for prompt, response, tags in prompt_response_and_tags:
         plomp.record_prompt(prompt, tags=tags, buffer=buffer).complete(response)

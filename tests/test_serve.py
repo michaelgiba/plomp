@@ -1,14 +1,15 @@
 import datetime as dt
 import io
 import json
+import random
 import sys
 import textwrap
-import random
 from datetime import datetime, timedelta
 
 import pytest
 
 import plomp
+import plomp.serve
 
 
 def test_serialization():
@@ -105,9 +106,13 @@ def test_serialization():
         "yi",
     ]
 
+    plomp.serve_buffer(buffer, port=9701)
+
+    import time
+
     for i in range(2000):
         entry_type = random.choice(["prompt", "event"])
-
+        time.sleep(0.03)
         if entry_type == "prompt":
             recipient = random.choice(names)
             topic = random.choice(topics)

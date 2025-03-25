@@ -1,20 +1,41 @@
 const PlompViewer = (function() {
     const bufferData = __PLOMP_BUFFER_JSON__;
+    let steppingEnabled = false;
+    let currentStepIndex = 0;
     
-    const TimelineView = {
-        render: function(container) {
-            const loadingDiv = document.getElementById('loading-indicator');
-            loadingDiv.style.display = 'block';
-            
-            container.innerHTML = '';
-            
-            const timelineContainer = document.createElement('div');
-            container.appendChild(timelineContainer);
-            
+    // Utility functions
+    const Utils = {
+        getItemColor: function(d, index, items, steppingEnabled, currentStepIndex) {
+            if (steppingEnabled) {
+                if (index === currentStepIndex) {
+                    return '#ff9500'; // Highlighted color for current step
+                } else if (index < currentStepIndex) {
+                    // Normal colors for executed items
+                    if (d.type === 'prompt-request') {
+                        const completed = items.some(it => it.type === 'prompt-completion' && it.id === d.id);
+                        return completed ? '#6baed6' : '#f5a8a8';
+                    }
+                    if (d.type === 'prompt-completion') return '#3182bd';
+                    if (d.type === 'event') return '#74c476';
+                    return '#9e9ac8';
+                } else {
+                    return '#e0e0e0'; // Light gray for future items
+                }
+            } else {
+                // Normal colors when stepping is disabled
+                if (d.type === 'prompt-request') {
+                    const completed = items.some(it => it.type === 'prompt-completion' && it.id === d.id);
+                    return completed ? '#6baed6' : '#f5a8a8';
+                }
+                if (d.type === 'prompt-completion') return '#3182bd';
+                if (d.type === 'event') return '#74c476';
+                return '#9e9ac8';
+            }
+        },
+        
+        processBufferItems: function(bufferData) {
             if (!bufferData || !Array.isArray(bufferData.buffer_items)) {
-                timelineContainer.innerHTML = '<p>No valid buffer items found.</p>';
-                loadingDiv.style.display = 'none';
-                return;
+                return [];
             }
             
             // Transform bufferData items so that each 'prompt' item generates two entries
@@ -38,44 +59,99 @@ const PlompViewer = (function() {
                     expandedItems.push(originalItem);
                 }
             });
-            const items = expandedItems.sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
             
-            if (!items.length) {
-                timelineContainer.innerHTML = '<p>No buffer items to display.</p>';
-                loadingDiv.style.display = 'none';
-                return;
-            }
-            
-            const tooltip = d3.select(container)
-                .append('div')
-                .attr('class', 'timeline-tooltip');
-            
-            const width = container.clientWidth;
-            const itemHeight = 20;
-            const height = items.length * itemHeight + 10;
-            
+            return expandedItems.sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
+        },
+        
+        extractTagPairs: function(items) {
+            const allTagPairs = new Set();
+            items.forEach(item => {
+                if (item.tags) {
+                    Object.entries(item.tags).forEach(([k, v]) => {
+                        allTagPairs.add(`${k}=${v}`);
+                    });
+                }
+            });
+            return allTagPairs;
+        }
+    };
+
+    // UI component handling
+    const UIComponents = {
+        setupStatsSection: function(container, bufferData, items) {
             if (bufferData.key) {
                 const statsDiv = document.getElementById('stats-section');
                 statsDiv.innerHTML = `
                     <p style="margin: 0; font-size: 12px;"><strong>Buffer:</strong> ${bufferData.key} (${items.length} items)</p>
                     <button id="step-backward" style="font-size: 12px;">&#9664;</button>
                     <button id="step-forward" style="font-size: 12px;">&#9654;</button>
+                    <button id="toggle-stepping" style="font-size: 12px;">Enable Stepping</button>
                 `;
             }
+        },
+        
+        createTooltip: function(container) {
+            return d3.select(container)
+                .append('div')
+                .attr('class', 'timeline-tooltip');
+        },
+        
+        updateDetailsSidebar: function(item, index) {
+            const sidebar = document.getElementById('details-sidebar');
+            sidebar.style.display = 'block';
+            sidebar.innerHTML = `
+                <h3>${item.type.toUpperCase()} (#${index})</h3>
+                <pre>${JSON.stringify(item, null, 2)}</pre>
+            `;
+        },
+        
+        setupTagFilters: function(items) {
+            const allTagPairs = Utils.extractTagPairs(items);
+            const tagFiltersContainer = document.getElementById('tag-filters');
+            tagFiltersContainer.innerHTML = '';
             
-            const svg = d3.select(timelineContainer)
+            allTagPairs.forEach(tagPair => {
+                const btn = document.createElement('div');
+                btn.className = 'tag-filter';
+                btn.textContent = tagPair;
+                btn.addEventListener('click', () => {
+                    btn.classList.toggle('active');
+                    UIComponents.applyTagFilter(items);
+                });
+                tagFiltersContainer.appendChild(btn);
+            });
+        },
+        
+        applyTagFilter: function(items) {
+            const active = Array.from(document.querySelectorAll('.tag-filter.active'))
+                .map(el => el.textContent);
+            
+            // Build the 'visible' list based on active tags
+            const visibleData = items.filter(d => {
+                if (!active.length) return true;
+                if (!d.tags) return false;
+                return active.every(pair => {
+                    const [k, v] = pair.split('=');
+                    return d.tags[k] === v;
+                });
+            });
+            
+            // Update display styling (hide non-visible items)
+            d3.selectAll('.timeline-item')
+                .style('display', d => visibleData.includes(d) ? '' : 'none');
+        }
+    };
+
+    // Timeline rendering
+    const TimelineRenderer = {
+        createSVG: function(container, width, height) {
+            return d3.select(container)
                 .append('svg')
                 .attr('width', width - 400)
                 .attr('height', height);
-            
-            const yScale = d3.scaleBand()
-                .domain(d3.range(items.length))
-                .range([0, height])
-                .padding(0.1);
-            
-            const leftColumnWidth = 70;
-            
-            // Create separate group for timestamps
+        },
+        
+        renderTimestamps: function(svg, yScale, items, leftColumnWidth) {
             const timestampGroup = svg.append('g')
                 .attr('class', 'timestamp-group');
             timestampGroup.selectAll('.timestamp')
@@ -89,8 +165,11 @@ const PlompViewer = (function() {
                 .style('font-size', '10px')
                 .style('fill', '#666')
                 .text(d => new Date(d.timestamp).toLocaleTimeString());
-            
-            // Rename and place the actual timeline blocks in a separate group
+                
+            return timestampGroup;
+        },
+        
+        renderItemBlocks: function(svg, yScale, items, width, leftColumnWidth, tooltip) {
             const itemBlocksGroup = svg.append('g')
                 .attr('class', 'item-block-group');
             
@@ -107,15 +186,7 @@ const PlompViewer = (function() {
             blocks.append('rect')
                 .attr('height', yScale.bandwidth())
                 .attr('width', width - 500)
-                .attr('fill', d => {
-                    if (d.type === 'prompt-request') {
-                        const completed = items.some(it => it.type === 'prompt-completion' && it.id === d.id);
-                        return completed ? '#6baed6' : '#f5a8a8';
-                    }
-                    if (d.type === 'prompt-completion') return '#3182bd';
-                    if (d.type === 'event') return '#74c476';
-                    return '#9e9ac8';
-                });
+                .attr('fill', (d, i) => Utils.getItemColor(d, i, items, steppingEnabled, currentStepIndex));
             
             blocks.append('text')
                 .attr('x', 4)
@@ -131,11 +202,19 @@ const PlompViewer = (function() {
                     return snippet ? base + ' - ' + snippet + '...' : base;
                 });
             
+            TimelineRenderer.attachBlockEvents(blocks, items, tooltip);
+            
+            return itemBlocksGroup;
+        },
+        
+        attachBlockEvents: function(blocks, items, tooltip) {
             blocks.on('mouseover', function(event, d) {
-                if (d.type === 'prompt-request') d3.select(this).select('rect').attr('fill', '#3182bd');
-                else if (d.type === 'prompt-completion') d3.select(this).select('rect').attr('fill', '#6baed6');
-                else if (d.type === 'event') d3.select(this).select('rect').attr('fill', '#31a354');
-                else d3.select(this).select('rect').attr('fill', '#6a51a3');
+                if (!steppingEnabled || items.indexOf(d) <= currentStepIndex) {
+                    if (d.type === 'prompt-request') d3.select(this).select('rect').attr('fill', '#3182bd');
+                    else if (d.type === 'prompt-completion') d3.select(this).select('rect').attr('fill', '#6baed6');
+                    else if (d.type === 'event') d3.select(this).select('rect').attr('fill', '#31a354');
+                    else d3.select(this).select('rect').attr('fill', '#6a51a3');
+                }
                 
                 const sTime = new Date(d.timestamp).toLocaleTimeString();
                 let html = `<strong>${d.type.toUpperCase()}</strong><br>Timestamp: ${sTime}`;
@@ -146,91 +225,107 @@ const PlompViewer = (function() {
                     .style('left', (event.pageX + 10) + 'px')
                     .style('top', (event.pageY - 28) + 'px');
             })
-            .on('mouseout', function() {
-                d3.select(this).select('rect').attr('fill', d => {
-                    if (d.type === 'prompt-request') {
-                        const completed = items.some(it => it.type === 'prompt-completion' && it.id === d.id);
-                        return completed ? '#6baed6' : '#f5a8a8';
-                    }
-                    if (d.type === 'prompt-completion') return '#3182bd';
-                    if (d.type === 'event') return '#74c476';
-                    return '#9e9ac8';
-                });
+            .on('mouseout', function(event, d) {
+                const i = items.indexOf(d);
+                d3.select(this).select('rect').attr('fill', Utils.getItemColor(d, i, items, steppingEnabled, currentStepIndex));
                 tooltip.style('display', 'none');
             })
             .on('click', function(event, d) {
-                const sidebar = document.getElementById('details-sidebar');
-                if (sidebar.style.display === 'none') {
-                    sidebar.style.display = 'block';
-                }
-                sidebar.innerHTML = `
-                    <h3>${d.type.toUpperCase()} (#${items.indexOf(d)})</h3>
-                    <pre>${JSON.stringify(d, null, 2)}</pre>
-                `;
+                UIComponents.updateDetailsSidebar(d, items.indexOf(d));
             })
             .on('dblclick', function(event, d) {
                 const sidebar = document.getElementById('details-sidebar');
                 sidebar.style.display = 'none';
             });
-
-            // Gather all key=value pairs from items
-            const allTagPairs = new Set();
-            items.forEach(item => {
-                if (item.tags) {
-                    Object.entries(item.tags).forEach(([k, v]) => {
-                        allTagPairs.add(`${k}=${v}`);
-                    });
-                }
-            });
-            // Render filter buttons for each distinct key=value pair
-            const tagFiltersContainer = document.getElementById('tag-filters');
-            tagFiltersContainer.innerHTML = '';
-            allTagPairs.forEach(tagPair => {
-                const btn = document.createElement('div');
-                btn.className = 'tag-filter';
-                btn.textContent = tagPair;
-                btn.addEventListener('click', () => {
-                    btn.classList.toggle('active');
-                    applyTagFilter();
-                });
-                tagFiltersContainer.appendChild(btn);
-            });
-
-            // Filter function to hide items which don't match all active key=value pairs
-            function applyTagFilter() {
-                const active = Array.from(document.querySelectorAll('.tag-filter.active'))
-                    .map(el => el.textContent);
-                
-                // Build the 'visible' list based on active tags
-                const visibleData = items.filter(d => {
-                    if (!active.length) return true;
-                    if (!d.tags) return false;
-                    return active.every(pair => {
-                        const [k, v] = pair.split('=');
-                        return d.tags[k] === v;
-                    });
-                });
-                
-                // Update display styling (hide non-visible items)
-                itemBlocksGroup.selectAll('.timeline-item')
-                    .style('display', d => visibleData.includes(d) ? '' : 'none');
+        },
+        
+        updateItemsDisplay: function(items) {
+            d3.selectAll('.timeline-item')
+                .select('rect')
+                .attr('fill', (d, i) => Utils.getItemColor(d, i, items, steppingEnabled, currentStepIndex));
+            
+            // Show current step in sidebar
+            if (steppingEnabled && currentStepIndex >= 0 && currentStepIndex < items.length) {
+                UIComponents.updateDetailsSidebar(items[currentStepIndex], currentStepIndex);
             }
-
+        }
+    };
+    
+    // Event handlers
+    const EventHandlers = {
+        setupSteppingControls: function(items) {
             const btnPrev = document.getElementById('step-backward');
             if (btnPrev) {
                 btnPrev.addEventListener('click', () => {
-                    console.log('Back step clicked');
-                    // ...step logic...
+                    if (steppingEnabled && currentStepIndex > 0) {
+                        currentStepIndex--;
+                        TimelineRenderer.updateItemsDisplay(items);
+                    }
                 });
             }
+            
             const btnNext = document.getElementById('step-forward');
             if (btnNext) {
                 btnNext.addEventListener('click', () => {
-                    console.log('Forward step clicked');
-                    // ...step logic...
+                    if (steppingEnabled && currentStepIndex < items.length - 1) {
+                        currentStepIndex++;
+                        TimelineRenderer.updateItemsDisplay(items);
+                    }
                 });
             }
-
+            
+            const btnToggleStepping = document.getElementById('toggle-stepping');
+            if (btnToggleStepping) {
+                btnToggleStepping.addEventListener('click', () => {
+                    steppingEnabled = !steppingEnabled;
+                    btnToggleStepping.textContent = steppingEnabled ? 'Disable Stepping' : 'Enable Stepping';
+                    currentStepIndex = steppingEnabled ? 0 : -1;
+                    TimelineRenderer.updateItemsDisplay(items);
+                });
+            }
+        }
+    };
+    
+    // Main timeline view controller
+    const TimelineView = {
+        render: function(container) {
+            const loadingDiv = document.getElementById('loading-indicator');
+            loadingDiv.style.display = 'block';
+            
+            container.innerHTML = '';
+            
+            const timelineContainer = document.createElement('div');
+            container.appendChild(timelineContainer);
+            
+            const items = Utils.processBufferItems(bufferData);
+            
+            if (!items.length) {
+                timelineContainer.innerHTML = '<p>No buffer items to display.</p>';
+                loadingDiv.style.display = 'none';
+                return;
+            }
+            
+            UIComponents.setupStatsSection(container, bufferData, items);
+            const tooltip = UIComponents.createTooltip(container);
+            
+            const width = container.clientWidth;
+            const itemHeight = 20;
+            const height = items.length * itemHeight + 10;
+            const leftColumnWidth = 70;
+            
+            const svg = TimelineRenderer.createSVG(timelineContainer, width, height);
+            
+            const yScale = d3.scaleBand()
+                .domain(d3.range(items.length))
+                .range([0, height])
+                .padding(0.1);
+            
+            TimelineRenderer.renderTimestamps(svg, yScale, items, leftColumnWidth);
+            TimelineRenderer.renderItemBlocks(svg, yScale, items, width, leftColumnWidth, tooltip);
+            
+            UIComponents.setupTagFilters(items);
+            EventHandlers.setupSteppingControls(items);
+            
             loadingDiv.style.display = 'none';
         }
     };

@@ -4,14 +4,9 @@ import textwrap
 from functools import cache, partial, wraps
 from typing import Callable
 
-from plomp.core import (
-    PlompBuffer,
-    PlompCallCompletion,
-    PlompCallHandle,
-    PlompCallTrace,
-    TagsType,
-)
-from plomp.serve import write_html
+from plomp.core import (PlompBuffer, PlompCallCompletion, PlompCallHandle,
+                        PlompCallTrace, TagsType)
+from plomp.serve import serve_buffer, write_html
 
 
 class PlompMisconfiguration(Exception):
@@ -79,7 +74,7 @@ def _trace_decorator(
 
 def _validate_wrap_kwargs(
     prompt_arg: int | None = None,
-    prompt_kwarg: int | None = None,
+    prompt_kwarg: str | None = None,
     capture_tag_args: dict[int, str] | None = None,
     capture_tag_kwargs: set[str] | None = None,
 ):
@@ -119,7 +114,7 @@ def _validate_wrap_kwargs(
 def wrap_prompt_fn(
     *,
     prompt_arg: int | None = None,
-    prompt_kwarg: int | None = None,
+    prompt_kwarg: str | None = None,
     capture_tag_args: dict[int, str] | None = None,
     capture_tag_kwargs: set[str] | None = None,
     buffer: PlompBuffer | None = None,
@@ -194,3 +189,20 @@ def wrap_prompt_fn(
         capture_tags=capture_tags,
         buffer=buffer,
     )
+
+
+__all__ = [
+    "buffer",
+    "PlompBuffer",
+    "PlompCallCompletion",
+    "PlompCallHandle",
+    "PlompCallTrace",
+    "record_event",
+    "record_prompt",
+    "render",
+    "serve_buffer",
+    "wrap_prompt_fn",
+    "write_html",
+]
+
+__version__ = "0.1.0"

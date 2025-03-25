@@ -4,7 +4,7 @@ import json
 from copy import deepcopy
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Callable, Iterator, Literal
+from typing import Callable, Iterator, List, Literal, Union
 
 TagType = str | dict
 TagsType = dict[str, TagType]
@@ -50,7 +50,7 @@ class PlompCallTrace:
     def render(self, io: io.IOBase, *, indent: int = 0):
         io.write(indent * " " + repr(self))
 
-    def to_dict(self) -> str:
+    def to_dict(self) -> dict:
         return {
             "prompt": self.prompt,
             "completion": self.completion.to_dict() if self.completion else None,
@@ -74,7 +74,7 @@ class PlompEvent:
     def render(self, io: io.IOBase, *, indent: int = 0):
         io.write(indent * " " + repr(self))
 
-    def to_dict(self) -> str:
+    def to_dict(self) -> dict:
         return {"payload": self.payload}
 
 
@@ -94,12 +94,14 @@ class PlompBufferItem:
     def call_trace(self) -> PlompCallTrace:
         if self.type_ != PlompBufferItemType.PROMPT:
             raise ValueError("Item is not a prompt request")
+        assert isinstance(self._data, PlompCallTrace)
         return self._data
 
     @property
     def event(self) -> PlompEvent:
         if self.type_ != PlompBufferItemType.EVENT:
             raise ValueError("Item is not an event")
+        assert isinstance(self._data, PlompEvent)
         return self._data
 
     def render(self, io: io.IOBase, *, indent: int = 0):
@@ -113,7 +115,7 @@ class PlompBufferItem:
         io.write((indent + 1) * " " + ")\n")
         io.write(indent * " " + ")")
 
-    def to_dict(self) -> str:
+    def to_dict(self) -> dict:
         return {
             "timestamp": self.timestamp.isoformat(),
             "tags": self.tags,
@@ -196,10 +198,21 @@ class PlompBuffer:
 
         def _tags_match_filter(
             filter_tag_key: str,
-            filter_tag_values: list[TagType],
+            filter_tag_values: list[TagType] | TagType,
             tags: TagsType,
         ) -> bool:
-            return filter_tag_key in tags and tags[filter_tag_key] in filter_tag_values
+            if filter_tag_key not in tags:
+                return False
+
+            tag_value = tags[filter_tag_key]
+            for filter_value in filter_tag_values:
+                if isinstance(tag_value, dict) and isinstance(filter_value, dict):
+                    # Compare dictionaries by their contents
+                    if tag_value == filter_value:
+                        return True
+                elif tag_value == filter_value:
+                    return True
+            return False
 
         tags_filter = _normalize_tag_filter(tags_filter)
 
@@ -233,11 +246,22 @@ class PlompBuffer:
         else:
             raise ValueError(f"Invalid filter method: {how}")
 
-    def _filter_all(self, tags: TagType) -> "PlompBuffer":
-        """Filter buffer items that contain all of the specified tags."""
-        return self.where(
-            truth_fn=lambda buffer_item: all(tag in buffer_item.tags for tag in tags)
-        )
+    def _filter_all(self, tags: Union[List[str], dict]) -> "PlompBuffer":
+        if isinstance(tags, list):
+            return self.where(
+                truth_fn=lambda buffer_item: all(
+                    tag in buffer_item.tags for tag in tags
+                )
+            )
+        elif isinstance(tags, dict):
+            return self.where(
+                truth_fn=lambda buffer_item: all(
+                    key in buffer_item.tags and buffer_item.tags[key] == value
+                    for key, value in tags.items()
+                )
+            )
+        else:
+            raise TypeError(f"Expected list or dict, got {type(tags).__name__}")
 
     def first(self, size: int = 1) -> "PlompBuffer":
         return PlompBuffer(buffer_items=self._buffer_items[:size], key=self.key)
@@ -254,7 +278,7 @@ class PlompBuffer:
     def __len__(self) -> int:
         return len(self._buffer_items)
 
-    def to_dict(self) -> str:
+    def to_dict(self) -> dict:
         return {
             "key": self.key,
             "buffer_items": [
