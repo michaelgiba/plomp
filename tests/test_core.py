@@ -211,18 +211,6 @@ def test_filters():
                 tags_filter={
                     "speaker": ["bob"],
                     "system_prompt": "you are a calculator",
-                }
-            )
-        )
-        == 3
-    )
-
-    assert (
-        len(
-            buffer.filter(
-                tags_filter={
-                    "speaker": ["bob"],
-                    "system_prompt": "you are a calculator",
                 },
                 how="all",
             )

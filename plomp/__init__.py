@@ -4,9 +4,9 @@ import textwrap
 from functools import cache, partial, wraps
 from typing import Callable
 
-from plomp.core import (PlompBuffer, PlompCallCompletion, PlompCallHandle,
-                        PlompCallTrace, TagsType)
-from plomp.serve import serve_buffer, write_html
+from plomp.core import (PlompBuffer, PlompBufferQuery, PlompCallCompletion,
+                        PlompCallHandle, PlompCallTrace, TagsType)
+from plomp.serve import write_html
 
 
 class PlompMisconfiguration(Exception):
@@ -46,7 +46,7 @@ def record_event(
     return buffer.record_event(payload=payload, tags=tags or dict())
 
 
-def render(buffer: PlompBuffer, write_to: io.IOBase):
+def render(buffer: PlompBuffer | PlompBufferQuery, write_to: io.IOBase):
     for item in buffer:
         item.render(write_to, indent=0)
         write_to.write("\n")
