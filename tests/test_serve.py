@@ -106,13 +106,8 @@ def test_serialization():
         "yi",
     ]
 
-    plomp.serve_buffer(buffer, port=9701)
-
-    import time
-
     for i in range(2000):
         entry_type = random.choice(["prompt", "event"])
-        time.sleep(0.03)
         if entry_type == "prompt":
             recipient = random.choice(names)
             topic = random.choice(topics)
@@ -156,5 +151,7 @@ def test_serialization():
             }
 
             plomp.record_event(payload, tags=tags, buffer=buffer)
+
+        buffer.last(1)
 
     plomp.write_html(buffer, "/home/michaelgiba/out.html")

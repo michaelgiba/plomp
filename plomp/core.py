@@ -68,6 +68,17 @@ class PlompCallHandle:
 
 
 @dataclass(slots=True, kw_only=True)
+class PlompQuery:
+    matched_indices: list[int]
+
+    def render(self, io: io.IOBase, *, indent: int = 0):
+        io.write(indent * " " + repr(self))
+
+    def to_dict(self) -> dict:
+        return {"indices": self.matched_indices}
+
+
+@dataclass(slots=True, kw_only=True)
 class PlompEvent:
     payload: dict
 
@@ -81,6 +92,7 @@ class PlompEvent:
 class PlompBufferItemType(Enum):
     PROMPT = "prompt"
     EVENT = "event"
+    QUERY = "query"
 
 
 @dataclass
@@ -88,7 +100,7 @@ class PlompBufferItem:
     timestamp: dt.datetime
     tags: TagsType
     type_: PlompBufferItemType
-    _data: PlompCallTrace | PlompEvent
+    _data: PlompCallTrace | PlompEvent | PlompQuery
 
     @property
     def call_trace(self) -> PlompCallTrace:
@@ -102,6 +114,13 @@ class PlompBufferItem:
         if self.type_ != PlompBufferItemType.EVENT:
             raise ValueError("Item is not an event")
         assert isinstance(self._data, PlompEvent)
+        return self._data
+
+    @property
+    def query(self) -> PlompEvent:
+        if self.type_ != PlompBufferItemType.QUERY:
+            raise ValueError("Item is not a query")
+        assert isinstance(self._data, PlompQuery)
         return self._data
 
     def render(self, io: io.IOBase, *, indent: int = 0):
@@ -167,6 +186,21 @@ class PlompBuffer:
             )
         )
 
+    def _record_query(
+        self,
+        *,
+        matched_indices: list[int],
+    ):
+        query_time = self.timestamp_fn()
+        self._buffer_items.append(
+            PlompBufferItem(
+                query_time,
+                {},
+                PlompBufferItemType.QUERY,
+                PlompQuery(matched_indices=matched_indices),
+            )
+        )
+
     def __iter__(self) -> Iterator[PlompBufferItem]:
         for buffer_item in self._buffer_items:
             yield deepcopy(buffer_item)
@@ -178,9 +212,13 @@ class PlompBuffer:
     ) -> "PlompBuffer":
         """Filter buffer items based on a truth function."""
         filtered_buffer = []
-        for buffer_item in self._buffer_items:
+        matched_indices = []
+        for idx, buffer_item in enumerate(self._buffer_items):
             if truth_fn(buffer_item):
                 filtered_buffer.append(buffer_item)
+                matched_indices.append(idx)
+
+        self._record_query(matched_indices=matched_indices)
         return PlompBuffer(buffer_items=filtered_buffer, key=self.key)
 
     def filter(
