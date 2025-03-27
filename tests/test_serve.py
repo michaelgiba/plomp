@@ -1,8 +1,10 @@
 import datetime as dt
 import io
 import json
+import os
 import random
 import sys
+import tempfile
 import textwrap
 from datetime import datetime, timedelta
 
@@ -11,7 +13,16 @@ import pytest
 import plomp
 
 
-def test_serialization():
+@pytest.fixture
+def temp_html_file():
+    with tempfile.NamedTemporaryFile(suffix=".html", delete=False) as temp_file:
+        yield temp_file.name
+    # Cleanup after test
+    if os.path.exists(temp_file.name):
+        os.remove(temp_file.name)
+
+
+def test_serialization(temp_html_file):
     buffer = plomp.buffer(key="test_serialization")
 
     # Base data templates
@@ -150,5 +161,19 @@ def test_serialization():
             }
 
             plomp.record_event(payload, tags=tags, buffer=buffer)
+
+        buffer.last(10).filter(
+            tags_filter={
+                "event_type": random.choice(["chat", "notification", "system", "alert"])
+            }
+        ).record(tags={})
+
+    # Write to the temp file provided by the fixture
+    plomp.write_html(buffer, temp_html_file)
+
+    # Verify the file contains expected elements
+    with open(temp_html_file, "r", encoding="utf-8") as f:
+        content = f.read()
+        assert len(content) > 0
 
     plomp.write_html(buffer, "/home/michaelgiba/out.html")

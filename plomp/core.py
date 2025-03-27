@@ -78,70 +78,35 @@ class PlompEvent:
         return {"payload": self.payload}
 
 
-class PlompBufferItemType(Enum):
-    PROMPT = "prompt"
-    EVENT = "event"
-
-
-@dataclass
-class PlompBufferItem:
-    timestamp: dt.datetime
-    tags: TagsType
-    type_: PlompBufferItemType
-    _data: PlompCallTrace | PlompEvent
-
-    @property
-    def call_trace(self) -> PlompCallTrace:
-        if self.type_ != PlompBufferItemType.PROMPT:
-            raise ValueError("Item is not a prompt request")
-        assert isinstance(self._data, PlompCallTrace)
-        return self._data
-
-    @property
-    def event(self) -> PlompEvent:
-        if self.type_ != PlompBufferItemType.EVENT:
-            raise ValueError("Item is not an event")
-        assert isinstance(self._data, PlompEvent)
-        return self._data
-
-    def render(self, io: io.IOBase, *, indent: int = 0):
-        io.write(indent * " " + self.__class__.__name__ + "(\n")
-        io.write((indent + 1) * " " + f"timestamp={repr(self.timestamp)},\n")
-        io.write((indent + 1) * " " + f"tags={repr(self.tags)},\n")
-        io.write((indent + 1) * " " + f"type_={repr(self.type_)},\n")
-        io.write((indent + 1) * " " + "_data=(\n")
-        self._data.render(io, indent=indent + 2)
-        io.write("\n")
-        io.write((indent + 1) * " " + ")\n")
-        io.write(indent * " " + ")")
-
-    def to_dict(self) -> dict:
-        return {
-            "timestamp": self.timestamp.isoformat(),
-            "tags": self.tags,
-            "type": self.type_.value,
-            "data": self._data.to_dict(),
-        }
-
-
+@dataclass(slots=True, kw_only=True)
 class PlompBufferQuery:
 
+    buffer: "PlompBuffer"
+    matched_indices: list[int]
+    op_name: str
+
     def __init__(
-        self, buffer: "PlompBuffer", *, matched_indices: Iterable[int] | None = None
+        self,
+        buffer: "PlompBuffer",
+        *,
+        matched_indices: Iterable[int] | None = None,
+        op_name: str | None = None,
     ):
         self.buffer = buffer
         self.matched_indices: list[int] = sorted(
             list(range(len(buffer))) if matched_indices is None else matched_indices
         )
+        self.op_name = op_name or "<buffer>"
 
     def __iter__(self):
         for matched_index in self.matched_indices:
             yield self.buffer[matched_index]
 
-    def where(
+    def _where(
         self,
         *,
-        truth_fn: Callable[[PlompBufferItem], bool],
+        truth_fn: Callable[["PlompBufferItem"], bool],
+        condition_op_name: str,
     ) -> "PlompBufferQuery":
         """Filter buffer items based on a truth function."""
         matched_indices = []
@@ -149,7 +114,21 @@ class PlompBufferQuery:
             if truth_fn(self.buffer[i]):
                 matched_indices.append(i)
 
-        return PlompBufferQuery(buffer=self.buffer, matched_indices=matched_indices)
+        return PlompBufferQuery(
+            buffer=self.buffer,
+            matched_indices=matched_indices,
+            op_name=f"{condition_op_name}({self.op_name})",
+        )
+
+    def record(self, *, tags: TagsType):
+        self.buffer.record_query(plomp_query=self, tags=tags)
+
+    def where(
+        self,
+        *,
+        truth_fn: Callable[["PlompBufferItem"], bool],
+    ) -> "PlompBufferQuery":
+        return self._where(truth_fn=truth_fn, condition_op_name="where[]")
 
     def filter(
         self,
@@ -183,33 +162,37 @@ class PlompBufferQuery:
             return False
 
         tags_filter = _normalize_tag_filter(tags_filter)
+        condition_op_name = f"filter[how={how!r}, tags={tags_filter!r}]"
 
         if how == "any":
-            return self.where(
+            return self._where(
                 truth_fn=lambda buffer_item: any(
                     _tags_match_filter(
                         filter_tag_key, filter_tag_values, buffer_item.tags
                     )
                     for filter_tag_key, filter_tag_values in tags_filter.items()
-                )
+                ),
+                condition_op_name=condition_op_name,
             )
         elif how == "all":
-            return self.where(
+            return self._where(
                 truth_fn=lambda buffer_item: all(
                     _tags_match_filter(
                         filter_tag_key, filter_tag_values, buffer_item.tags
                     )
                     for filter_tag_key, filter_tag_values in tags_filter.items()
-                )
+                ),
+                condition_op_name=condition_op_name,
             )
         elif how == "none":
-            return self.where(
+            return self._where(
                 truth_fn=lambda buffer_item: not any(
                     _tags_match_filter(
                         filter_tag_key, filter_tag_values, buffer_item.tags
                     )
                     for filter_tag_key, filter_tag_values in tags_filter.items()
-                )
+                ),
+                condition_op_name=condition_op_name,
             )
         else:
             raise ValueError(f"Invalid filter method: {how}")
@@ -218,30 +201,91 @@ class PlompBufferQuery:
         return PlompBufferQuery(
             buffer=self.buffer,
             matched_indices=self.matched_indices[:size],
+            op_name=f"first[size={size}]({self.op_name})",
         )
 
     def last(self, size: int = 1) -> "PlompBufferQuery":
         return PlompBufferQuery(
             buffer=self.buffer,
             matched_indices=self.matched_indices[-size:],
+            op_name=f"last[size={size}]({self.op_name})",
         )
 
     def window(self, start: int, end: int) -> "PlompBufferQuery":
         return PlompBufferQuery(
             buffer=self.buffer,
             matched_indices=self.matched_indices[start:end],
+            op_name=f"window[start={start}, end={end}]({self.op_name})",
         )
+
+    def to_dict(self) -> dict:
+        return {
+            "buffer_key": self.buffer.key,
+            "op_name": self.op_name,
+            "matched_indices": self.matched_indices,
+        }
 
     def __len__(self):
         return len(self.matched_indices)
 
-    def __getitem__(self, i: int) -> PlompBufferItem:
+    def __getitem__(self, i: int) -> "PlompBufferItem":
         return self.buffer[self.matched_indices[i]]
+
+    def render(self, io: io.IOBase, *, indent: int = 0):
+        io.write(indent * " " + repr(self))
+
+
+class PlompBufferItemType(Enum):
+    PROMPT = "prompt"
+    EVENT = "event"
+    QUERY = "query"
+
+
+@dataclass
+class PlompBufferItem:
+    timestamp: dt.datetime
+    tags: TagsType
+    type_: PlompBufferItemType
+    _data: PlompCallTrace | PlompEvent | PlompBufferQuery
+
+    @property
+    def call_trace(self) -> PlompCallTrace:
+        if self.type_ != PlompBufferItemType.PROMPT:
+            raise ValueError("Item is not a prompt request")
+        assert isinstance(self._data, PlompCallTrace)
+        return self._data
+
+    @property
+    def event(self) -> PlompEvent:
+        if self.type_ != PlompBufferItemType.EVENT:
+            raise ValueError("Item is not an event")
+        assert isinstance(self._data, PlompEvent)
+        return self._data
+
+    @property
+    def query(self) -> PlompBufferQuery:
+        if self.type_ != PlompBufferItemType.QUERY:
+            raise ValueError("Item is not a query")
+        assert isinstance(self._data, PlompBufferQuery)
+        return self._data
+
+    def render(self, io: io.IOBase, *, indent: int = 0):
+        io.write(indent * " " + self.__class__.__name__ + "(\n")
+        io.write((indent + 1) * " " + f"timestamp={repr(self.timestamp)},\n")
+        io.write((indent + 1) * " " + f"tags={repr(self.tags)},\n")
+        io.write((indent + 1) * " " + f"type_={repr(self.type_)},\n")
+        io.write((indent + 1) * " " + "_data=(\n")
+        self._data.render(io, indent=indent + 2)
+        io.write("\n")
+        io.write((indent + 1) * " " + ")\n")
+        io.write(indent * " " + ")")
 
     def to_dict(self) -> dict:
         return {
-            "key": self.key,
-            "buffer_items": [buffer_item.to_dict() for buffer_item in self],
+            "timestamp": self.timestamp.isoformat(),
+            "tags": self.tags,
+            "type": self.type_.value,
+            "data": self._data.to_dict(),
         }
 
 
@@ -289,7 +333,10 @@ class PlompBuffer:
         )
 
     def record_query(self, *, plomp_query: PlompBufferQuery, tags: TagsType):
-        raise NotImplementedError()
+        record_time = self.timestamp_fn()
+        self._buffer_items.append(
+            PlompBufferItem(record_time, tags, PlompBufferItemType.QUERY, plomp_query)
+        )
 
     def __iter__(self) -> Iterator[PlompBufferItem]:
         for buffer_item in self._buffer_items:

@@ -228,6 +228,12 @@ def test_filters():
         ),
     )
 
+    no_speaker.record(tags={})
+
+    assert buffer[-1].type_ == plomp.PlompBufferItemType.QUERY
+    assert buffer[-1].query.matched_indices == [3]
+    assert buffer[3] == no_speaker[0]
+
 
 def test_failures_of_wrapping():
 

@@ -17,6 +17,7 @@ const PlompViewer = (function() {
                     }
                     if (d.type === 'prompt-completion') return '#3182bd';
                     if (d.type === 'event') return '#74c476';
+                    if (d.type === 'query') return '#a39c12'; // Yellow color for query items
                     return '#9e9ac8';
                 } else {
                     return '#e0e0e0'; // Light gray for future items
@@ -29,6 +30,7 @@ const PlompViewer = (function() {
                 }
                 if (d.type === 'prompt-completion') return '#3182bd';
                 if (d.type === 'event') return '#74c476';
+                if (d.type === 'query') return '#a39c12'; // Yellow color for query items
                 return '#9e9ac8';
             }
         },
