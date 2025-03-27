@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
 authors = [
-    {name = "Michael Giba", email = "your.email@example.com"}
+    {name = "Michael Giba", email = "michaelgiba@gmail.com"}
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -36,3 +36,9 @@ dev = [
     "isort>=5.10",
     "mypy>=0.950",
 ]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.package-data]
+plomp = ["resources/**/*"]
