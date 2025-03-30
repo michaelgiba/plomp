@@ -32,9 +32,7 @@ body {
 .timeline-item {
     cursor: pointer;
 }
-.timeline-item:hover rect {
-    fill: #555;
-}
+
 .timeline-tooltip {
     position: absolute;
     background-color: #f3f3f3;
