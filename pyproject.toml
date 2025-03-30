@@ -42,6 +42,12 @@ dev = [
 
 [tool.setuptools]
 include-package-data = true
+package-data = {"plomp" = ["resources/**/*"]}
+exclude-package-data = {"plomp" = ["**/node_modules", "**/frontend", "**/ts", "**/*.ts"]}
 
-[tool.setuptools.package-data]
-plomp = ["resources/**/*"]
+
+[tool.poetry.packages]
+include = ["plomp"]
+
+[tool.poetry.build]
+script = "build_scripts/compile_frontend.py"

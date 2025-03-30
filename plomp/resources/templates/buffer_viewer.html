@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +9,7 @@
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <!-- CSS_PLACEHOLDER -->
 </head>
+
 <body>
     <div id="container">
         <h2 style="margin: 4px 0; font-size: 14px;">Plomp Buffer Viewer</h2>
@@ -20,17 +22,16 @@
             <strong style="font-size: 12px;">Tags:</strong>
             <div id="tag-filters" class="tag-filters"></div>
         </div>
-        
+
         <div class="data-view">
             <div id="timeline-view"></div>
             <!-- New sidebar for details -->
             <div id="details-sidebar" class="details-sidebar"></div>
         </div>
     </div>
-    <!-- JS_PLACEHOLDER -->
-    <script>
+    <script type="module">
         const plompData = __PLOMP_BUFFER_JSON__;
-        // Any remaining JS that needs direct access to the data
-    </script>
+    </script>    
+    <!-- JS_PLACEHOLDER -->
 </body>
 </html>

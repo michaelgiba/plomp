@@ -1,0 +1,21 @@
+{
+  "name": "plomp-frontend",
+  "version": "1.0.0",
+  "description": "Frontend for Plomp visualization",
+  "main": "dist/bundle.js",
+  "scripts": {
+    "build": "webpack --config webpack.config.js",
+    "watch": "webpack --watch --config webpack.config.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "d3": "^7.8.5"
+  },
+  "devDependencies": {
+    "@types/d3": "^7.4.0",
+    "ts-loader": "^9.4.4",
+    "typescript": "^5.2.2",
+    "webpack": "^5.88.2",
+    "webpack-cli": "^5.1.4"
+  }
+}

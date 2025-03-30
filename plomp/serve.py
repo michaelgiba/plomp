@@ -25,7 +25,7 @@ def write_html(buffer: PlompBuffer, output_uri: str):
     # Get component files
     template = _get_template_file("buffer_viewer.html")
     css = _get_template_file("buffer_viewer.css")
-    js = _get_template_file("buffer_viewer.js")
+    js = _get_template_file("bundle.js")
 
     # Assemble the HTML with components and data
     html = (
