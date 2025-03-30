@@ -20,6 +20,9 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
+dependencies = [
+    "typeguard",
+]
 
 [project.urls]
 "Homepage" = "https://github.com/michaelgiba/plomp"

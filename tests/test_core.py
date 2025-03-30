@@ -5,8 +5,20 @@ import pytest
 import plomp
 
 
+def mock_buffer(key: str):
+    """Create a buffer with mocked timestamp function."""
+    buffer = plomp.buffer(key=key)
+
+    # Mock timestamp to return a fixed date
+    def mock_timestamp_fn() -> dt.datetime:
+        return dt.datetime(2023, 10, 1)
+
+    buffer.timestamp_fn = mock_timestamp_fn
+    return buffer
+
+
 def test_manual_traces():
-    buffer = plomp.buffer(key="test_manual_traces")
+    buffer = mock_buffer("test_manual_traces")
     prompt_response_and_tags = [
         ("What is 1 + 1", "2", {"math": True}),
         ("What is 2 + 1", "3", {"math": True}),
@@ -19,13 +31,7 @@ def test_manual_traces():
 
 
 def test_wrapped_traces_basic():
-
-    # TODO: Properly mock the datetimes
-    def mock_timestamp_fn() -> dt.datetime:
-        return dt.datetime(2023, 10, 1)
-
-    buffer = plomp.buffer(key="test_wrapped_traces_basic")
-    buffer.timestamp_fn = mock_timestamp_fn
+    buffer = mock_buffer("test_wrapped_traces_basic")
 
     @plomp.wrap_prompt_fn(buffer=buffer)
     def prompt_fn(prompt: str, *, mock_return_value: str, **kwargs) -> str:
@@ -66,13 +72,7 @@ def test_wrapped_traces_basic():
 
 
 def test_wrapped_traces():
-
-    # TODO: Properly mock the datetimes
-    def mock_timestamp_fn() -> dt.datetime:
-        return dt.datetime(2023, 10, 1)
-
-    buffer = plomp.buffer(key="test_wrapped_traces")
-    buffer.timestamp_fn = mock_timestamp_fn
+    buffer = mock_buffer("test_wrapped_traces")
 
     @plomp.wrap_prompt_fn(
         capture_tag_kwargs={"system_prompt"},
@@ -105,13 +105,7 @@ def test_wrapped_traces():
 
 
 def test_window_functions():
-    buffer = plomp.buffer(key="test_window_functions")
-
-    # TODO: Properly mock the datetimes
-    def mock_timestamp_fn() -> dt.datetime:
-        return dt.datetime(2023, 10, 1)
-
-    buffer.timestamp_fn = mock_timestamp_fn
+    buffer = mock_buffer("test_window_functions")
 
     @plomp.wrap_prompt_fn(buffer=buffer)
     def prompt_fn(prompt: str, *, mock_return_value: str, **kwargs) -> str:
@@ -159,13 +153,7 @@ def test_window_functions():
 
 
 def test_filters():
-    buffer = plomp.buffer(key="test_filters")
-
-    # TODO: Properly mock the datetimes
-    def mock_timestamp_fn() -> dt.datetime:
-        return dt.datetime(2023, 10, 1)
-
-    buffer.timestamp_fn = mock_timestamp_fn
+    buffer = mock_buffer("test_filters")
 
     @plomp.wrap_prompt_fn(
         buffer=buffer, capture_tag_kwargs={"speaker", "system_prompt"}
@@ -233,6 +221,45 @@ def test_filters():
     assert buffer[-1].type_ == plomp.PlompBufferItemType.QUERY
     assert buffer[-1].query.matched_indices == [3]
     assert buffer[3] == no_speaker[0]
+
+
+def test_union():
+    buffer = mock_buffer("test_union")
+
+    @plomp.wrap_prompt_fn(buffer=buffer, capture_tag_kwargs={"speaker"})
+    def prompt_fn(prompt: str, *, mock_return_value: str, **kwargs) -> str:
+        return mock_return_value
+
+    prompt_fn("What is 1 + 1", mock_return_value="2", speaker="bob")
+    prompt_fn("What is 1 + 3", mock_return_value="4", speaker="alice")
+    prompt_fn("What is 2 + 3", mock_return_value="5", speaker="bob")
+    prompt_fn("What is 7 + 3", mock_return_value="10")
+
+    assert len(buffer) == 4
+
+    bob_speaker = buffer.filter(tags_filter={"speaker": "bob"})
+    alice_speaker = buffer.filter(tags_filter={"speaker": "alice"})
+    alice_and_bob = bob_speaker.union(alice_speaker)
+    assert len(alice_and_bob) == 3
+
+
+def test_intersection():
+    buffer = mock_buffer("test_intersection")
+
+    @plomp.wrap_prompt_fn(buffer=buffer, capture_tag_kwargs={"speaker", "friend"})
+    def prompt_fn(prompt: str, *, mock_return_value: str, **kwargs) -> str:
+        return mock_return_value
+
+    prompt_fn("What is 1 + 1", mock_return_value="2", speaker="bob")
+    prompt_fn("What is 1 + 3", mock_return_value="4", speaker="bob", friend="alice")
+    prompt_fn("What is 2 + 3", mock_return_value="5", speaker="bob")
+    prompt_fn("What is 7 + 3", mock_return_value="10")
+
+    assert len(buffer) == 4
+
+    bob_speaker = buffer.filter(tags_filter={"speaker": "bob"})
+    alice_friend = buffer.filter(tags_filter={"friend": "alice"})
+    assert len(bob_speaker.intersection(alice_friend)) == 1
 
 
 def test_failures_of_wrapping():

@@ -6,11 +6,14 @@ from dataclasses import dataclass
 from enum import Enum, auto
 from typing import Callable, Iterable, Iterator, List, Literal, Union
 
-TagType = str | dict
+from typeguard import typechecked
+
+TagType = str | dict | bool | int | float
 TagsType = dict[str, TagType]
 TagsFilter = dict[str, list[TagType] | TagType]
 
 
+@typechecked
 @dataclass(slots=True, frozen=True, kw_only=True)
 class PlompCallCompletion:
     completion_timestamp: dt.datetime
@@ -23,6 +26,7 @@ class PlompCallCompletion:
         }
 
 
+@typechecked
 @dataclass(slots=True, kw_only=True)
 class PlompCallTrace:
 
@@ -38,6 +42,7 @@ class PlompCallTrace:
         self.prompt = prompt
         self.completion = completion
 
+    @typechecked
     def complete(self, completion_timestamp: dt.datetime, response: str):
         if self.completion is not None:
             raise ValueError("Call has already been completed")
@@ -47,6 +52,7 @@ class PlompCallTrace:
             response=response,
         )
 
+    @typechecked
     def render(self, io: io.IOBase, *, indent: int = 0):
         io.write(indent * " " + repr(self))
 
@@ -57,20 +63,24 @@ class PlompCallTrace:
         }
 
 
+@typechecked
 class PlompCallHandle:
 
     def __init__(self, buffer: "PlompBuffer", index: int):
         self.buffer = buffer
         self.index = index
 
+    @typechecked
     def complete(self, response: str):
         self.buffer.record_prompt_completion(self.index, response)
 
 
+@typechecked
 @dataclass(slots=True, kw_only=True)
 class PlompEvent:
     payload: dict
 
+    @typechecked
     def render(self, io: io.IOBase, *, indent: int = 0):
         io.write(indent * " " + repr(self))
 
@@ -78,6 +88,7 @@ class PlompEvent:
         return {"payload": self.payload}
 
 
+@typechecked
 @dataclass(slots=True, kw_only=True)
 class PlompBufferQuery:
 
@@ -102,6 +113,7 @@ class PlompBufferQuery:
         for matched_index in self.matched_indices:
             yield self.buffer[matched_index]
 
+    @typechecked
     def _where(
         self,
         *,
@@ -120,9 +132,11 @@ class PlompBufferQuery:
             op_name=f"{condition_op_name}({self.op_name})",
         )
 
+    @typechecked
     def record(self, *, tags: TagsType):
         self.buffer.record_query(plomp_query=self, tags=tags)
 
+    @typechecked
     def where(
         self,
         *,
@@ -130,6 +144,7 @@ class PlompBufferQuery:
     ) -> "PlompBufferQuery":
         return self._where(truth_fn=truth_fn, condition_op_name="where[]")
 
+    @typechecked
     def filter(
         self,
         *,
@@ -150,6 +165,9 @@ class PlompBufferQuery:
         ) -> bool:
             if filter_tag_key not in tags:
                 return False
+
+            if not isinstance(filter_tag_values, list):
+                filter_tag_values = [filter_tag_values]
 
             tag_value = tags[filter_tag_key]
             for filter_value in filter_tag_values:
@@ -197,6 +215,7 @@ class PlompBufferQuery:
         else:
             raise ValueError(f"Invalid filter method: {how}")
 
+    @typechecked
     def first(self, size: int = 1) -> "PlompBufferQuery":
         return PlompBufferQuery(
             buffer=self.buffer,
@@ -204,6 +223,7 @@ class PlompBufferQuery:
             op_name=f"first[size={size}]({self.op_name})",
         )
 
+    @typechecked
     def last(self, size: int = 1) -> "PlompBufferQuery":
         return PlompBufferQuery(
             buffer=self.buffer,
@@ -211,11 +231,32 @@ class PlompBufferQuery:
             op_name=f"last[size={size}]({self.op_name})",
         )
 
+    @typechecked
     def window(self, start: int, end: int) -> "PlompBufferQuery":
         return PlompBufferQuery(
             buffer=self.buffer,
             matched_indices=self.matched_indices[start:end],
             op_name=f"window[start={start}, end={end}]({self.op_name})",
+        )
+
+    @typechecked
+    def union(self, other: "PlompBufferQuery") -> "PlompBufferQuery":
+        return PlompBufferQuery(
+            buffer=self.buffer,
+            matched_indices=sorted(
+                set(self.matched_indices) | set(other.matched_indices)
+            ),
+            op_name=f"union[other={other.op_name}]({self.op_name})",
+        )
+
+    @typechecked
+    def intersection(self, other: "PlompBufferQuery") -> "PlompBufferQuery":
+        return PlompBufferQuery(
+            buffer=self.buffer,
+            matched_indices=sorted(
+                set(self.matched_indices) & set(other.matched_indices)
+            ),
+            op_name=f"intersection[other={other.op_name}]({self.op_name})",
         )
 
     def to_dict(self) -> dict:
@@ -231,6 +272,7 @@ class PlompBufferQuery:
     def __getitem__(self, i: int) -> "PlompBufferItem":
         return self.buffer[self.matched_indices[i]]
 
+    @typechecked
     def render(self, io: io.IOBase, *, indent: int = 0):
         io.write(indent * " " + repr(self))
 
@@ -241,6 +283,7 @@ class PlompBufferItemType(Enum):
     QUERY = "query"
 
 
+@typechecked
 @dataclass
 class PlompBufferItem:
     timestamp: dt.datetime
@@ -269,6 +312,7 @@ class PlompBufferItem:
         assert isinstance(self._data, PlompBufferQuery)
         return self._data
 
+    @typechecked
     def render(self, io: io.IOBase, *, indent: int = 0):
         io.write(indent * " " + self.__class__.__name__ + "(\n")
         io.write((indent + 1) * " " + f"timestamp={repr(self.timestamp)},\n")
@@ -289,6 +333,7 @@ class PlompBufferItem:
         }
 
 
+@typechecked
 class PlompBuffer:
 
     def __init__(
@@ -304,6 +349,7 @@ class PlompBuffer:
             deepcopy(buffer_item) for buffer_item in (buffer_items or [])
         ]
 
+    @typechecked
     def record_prompt_start(self, *, prompt: str, tags: TagsType) -> PlompCallHandle:
         insert_index = len(self._buffer_items)
         self._buffer_items.append(
@@ -316,6 +362,7 @@ class PlompBuffer:
         )
         return PlompCallHandle(self, insert_index)
 
+    @typechecked
     def record_prompt_completion(self, call_index: int, response: str):
         if self._buffer_items[call_index].type_ != PlompBufferItemType.PROMPT:
             raise ValueError("Item at index is not a prompt request")
@@ -324,6 +371,7 @@ class PlompBuffer:
             self.timestamp_fn(), response
         )
 
+    @typechecked
     def record_event(self, *, payload: dict, tags: TagsType):
         event_time = self.timestamp_fn()
         self._buffer_items.append(
@@ -332,6 +380,7 @@ class PlompBuffer:
             )
         )
 
+    @typechecked
     def record_query(self, *, plomp_query: PlompBufferQuery, tags: TagsType):
         record_time = self.timestamp_fn()
         self._buffer_items.append(
@@ -342,6 +391,7 @@ class PlompBuffer:
         for buffer_item in self._buffer_items:
             yield deepcopy(buffer_item)
 
+    @typechecked
     def where(
         self,
         *,
@@ -349,6 +399,7 @@ class PlompBuffer:
     ) -> "PlompBufferQuery":
         return PlompBufferQuery(self).where(truth_fn=truth_fn)
 
+    @typechecked
     def filter(
         self,
         *,
@@ -357,14 +408,35 @@ class PlompBuffer:
     ) -> "PlompBufferQuery":
         return PlompBufferQuery(self).filter(how=how, tags_filter=tags_filter)
 
+    @typechecked
     def first(self, size: int = 1) -> "PlompBufferQuery":
         return PlompBufferQuery(self).first(size)
 
+    @typechecked
     def last(self, size: int = 1) -> "PlompBufferQuery":
         return PlompBufferQuery(self).last(size)
 
+    @typechecked
     def window(self, start: int, end: int) -> "PlompBufferQuery":
         return PlompBufferQuery(self).window(start, end)
+
+    @typechecked
+    def union(
+        self, plomp_buffer_query: Union["PlompBuffer", PlompBufferQuery]
+    ) -> "PlompBufferQuery":
+        if isinstance(plomp_buffer_query, PlompBuffer):
+            plomp_buffer_query = PlompBufferQuery(plomp_buffer_query)
+
+        return PlompBufferQuery(self).union(plomp_buffer_query)
+
+    @typechecked
+    def intersection(
+        self, plomp_buffer_query: Union["PlompBuffer", PlompBufferQuery]
+    ) -> "PlompBufferQuery":
+        if isinstance(plomp_buffer_query, PlompBuffer):
+            plomp_buffer_query = PlompBufferQuery(plomp_buffer_query)
+
+        return PlompBufferQuery(self).intersection(plomp_buffer_query)
 
     def __getitem__(self, index: int) -> PlompBufferItem:
         return self._buffer_items[index]
