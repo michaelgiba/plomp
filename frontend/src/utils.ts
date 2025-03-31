@@ -53,7 +53,7 @@ export const Utils = {
         }
     },
 
-    processBufferItems: function(bufferData: BufferData | null): TimelineItem[] {
+    convertBufferDataToTimelineItems: function(bufferData: BufferData | null): TimelineItem[] {
         if (!bufferData || !Array.isArray(bufferData.buffer_items)) {
             return [];
         }
@@ -103,7 +103,6 @@ export const Utils = {
         return allTagPairs;
     },
 
-    // Process query item to highlight matched indices
     updateMatchedIndices: function(queryItem: TimelineItem, items: TimelineItem[], enableFocusMode = false): void {
         // Clear previous matched indices
         STATE.matchedIndices = [];

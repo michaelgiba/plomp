@@ -23,7 +23,7 @@ const TimelineView = {
         container.appendChild(timelineContainer);
 
         STATE.bufferData = __PLOMP_BUFFER_JSON__;
-        const items: TimelineItem[] = Utils.processBufferItems(STATE.bufferData);
+        const items: TimelineItem[] = Utils.convertBufferDataToTimelineItems(STATE.bufferData);
 
         if (!items.length) {
             timelineContainer.innerHTML = '<p>No buffer items to display.</p>';
