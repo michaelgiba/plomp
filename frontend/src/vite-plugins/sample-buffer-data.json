@@ -1,0 +1,344 @@
+{
+    "key": "test_serialization",
+    "buffer_items": [
+        {
+            "timestamp": "2025-03-31T21:34:44.566608",
+            "tags": {
+                "event_type": "alert"
+            },
+            "type": "event",
+            "data": {
+                "payload": {
+                    "message": "Message 0 about vacation plans",
+                    "from": "olivia",
+                    "to": "victor",
+                    "timestamp": "2025-03-31T05:31:44.566574"
+                }
+            }
+        },
+        {
+            "timestamp": "2025-03-31T21:34:44.566793",
+            "tags": {},
+            "type": "query",
+            "data": {
+                "buffer_key": "test_serialization",
+                "op_name": "filter[how='any', tags={'event_type': ['chat']}](last[size=10](<buffer>))",
+                "matched_indices": []
+            }
+        },
+        {
+            "timestamp": "2025-03-31T21:34:44.566812",
+            "tags": {
+                "model": "bloom"
+            },
+            "type": "prompt",
+            "data": {
+                "prompt": "Help me draft a message to bob regarding customer support",
+                "completion": {
+                    "completion_timestamp": "2025-03-31T21:34:44.566845",
+                    "response": "Here's a humorous message about customer support"
+                }
+            }
+        },
+        {
+            "timestamp": "2025-03-31T21:34:44.567024",
+            "tags": {},
+            "type": "query",
+            "data": {
+                "buffer_key": "test_serialization",
+                "op_name": "filter[how='any', tags={'event_type': ['notification']}](last[size=10](<buffer>))",
+                "matched_indices": []
+            }
+        },
+        {
+            "timestamp": "2025-03-31T21:34:44.567041",
+            "tags": {
+                "model": "qwen",
+                "importance": "low"
+            },
+            "type": "prompt",
+            "data": {
+                "prompt": "How would you respond to victor's message?",
+                "completion": null
+            }
+        },
+        {
+            "timestamp": "2025-03-31T21:34:44.567243",
+            "tags": {},
+            "type": "query",
+            "data": {
+                "buffer_key": "test_serialization",
+                "op_name": "filter[how='any', tags={'event_type': ['notification']}](last[size=10](<buffer>))",
+                "matched_indices": []
+            }
+        },
+        {
+            "timestamp": "2025-03-31T21:34:44.567265",
+            "tags": {
+                "event_type": "chat"
+            },
+            "type": "event",
+            "data": {
+                "payload": {
+                    "message": "Message 3 about team collaboration",
+                    "from": "charlie",
+                    "to": "quinn",
+                    "timestamp": "2025-03-31T05:28:44.567248"
+                }
+            }
+        },
+        {
+            "timestamp": "2025-03-31T21:34:44.567452",
+            "tags": {},
+            "type": "query",
+            "data": {
+                "buffer_key": "test_serialization",
+                "op_name": "filter[how='any', tags={'event_type': ['system']}](last[size=10](<buffer>))",
+                "matched_indices": []
+            }
+        },
+        {
+            "timestamp": "2025-03-31T21:34:44.567471",
+            "tags": {
+                "event_type": "alert"
+            },
+            "type": "event",
+            "data": {
+                "payload": {
+                    "message": "Message 4 about resource allocation",
+                    "from": "natalie",
+                    "to": "ian",
+                    "timestamp": "2025-03-31T06:08:44.567456"
+                }
+            }
+        },
+        {
+            "timestamp": "2025-03-31T21:34:44.567663",
+            "tags": {},
+            "type": "query",
+            "data": {
+                "buffer_key": "test_serialization",
+                "op_name": "filter[how='any', tags={'event_type': ['alert']}](last[size=10](<buffer>))",
+                "matched_indices": [
+                    0,
+                    8
+                ]
+            }
+        },
+        {
+            "timestamp": "2025-03-31T21:34:44.567679",
+            "tags": {
+                "model": "mistral",
+                "importance": "low"
+            },
+            "type": "prompt",
+            "data": {
+                "prompt": "Write a message to paul about yesterday's meeting",
+                "completion": null
+            }
+        },
+        {
+            "timestamp": "2025-03-31T21:34:44.567893",
+            "tags": {},
+            "type": "query",
+            "data": {
+                "buffer_key": "test_serialization",
+                "op_name": "filter[how='any', tags={'event_type': ['system']}](last[size=10](<buffer>))",
+                "matched_indices": []
+            }
+        },
+        {
+            "timestamp": "2025-03-31T21:34:44.567908",
+            "tags": {
+                "model": "bloom"
+            },
+            "type": "prompt",
+            "data": {
+                "prompt": "Compose a direct response to evan",
+                "completion": {
+                    "completion_timestamp": "2025-03-31T21:34:44.567939",
+                    "response": "Here's a direct message about yesterday's meeting"
+                }
+            }
+        },
+        {
+            "timestamp": "2025-03-31T21:34:44.568140",
+            "tags": {},
+            "type": "query",
+            "data": {
+                "buffer_key": "test_serialization",
+                "op_name": "filter[how='any', tags={'event_type': ['system']}](last[size=10](<buffer>))",
+                "matched_indices": []
+            }
+        },
+        {
+            "timestamp": "2025-03-31T21:34:44.568155",
+            "tags": {
+                "model": "falcon"
+            },
+            "type": "prompt",
+            "data": {
+                "prompt": "What would you like to say to greg?",
+                "completion": null
+            }
+        },
+        {
+            "timestamp": "2025-03-31T21:34:44.568366",
+            "tags": {},
+            "type": "query",
+            "data": {
+                "buffer_key": "test_serialization",
+                "op_name": "filter[how='any', tags={'event_type': ['notification']}](last[size=10](<buffer>))",
+                "matched_indices": []
+            }
+        },
+        {
+            "timestamp": "2025-03-31T21:34:44.568382",
+            "tags": {
+                "model": "pythia"
+            },
+            "type": "prompt",
+            "data": {
+                "prompt": "Help me draft a message to hannah regarding internal process",
+                "completion": {
+                    "completion_timestamp": "2025-03-31T21:34:44.568413",
+                    "response": "Here's a diplomatic message about internal process"
+                }
+            }
+        },
+        {
+            "timestamp": "2025-03-31T21:34:44.568614",
+            "tags": {},
+            "type": "query",
+            "data": {
+                "buffer_key": "test_serialization",
+                "op_name": "filter[how='any', tags={'event_type': ['alert']}](last[size=10](<buffer>))",
+                "matched_indices": [
+                    8
+                ]
+            }
+        },
+        {
+            "timestamp": "2025-03-31T21:34:44.568634",
+            "tags": {
+                "event_type": "notification"
+            },
+            "type": "event",
+            "data": {
+                "payload": {
+                    "message": "Message 9 about system upgrade",
+                    "from": "hannah",
+                    "to": "quinn",
+                    "timestamp": "2025-03-31T20:57:44.568618"
+                }
+            }
+        },
+        {
+            "timestamp": "2025-03-31T21:34:44.568826",
+            "tags": {},
+            "type": "query",
+            "data": {
+                "buffer_key": "test_serialization",
+                "op_name": "filter[how='any', tags={'event_type': ['alert']}](last[size=10](<buffer>))",
+                "matched_indices": []
+            }
+        },
+        {
+            "timestamp": "2025-03-31T21:34:44.568842",
+            "tags": {
+                "model": "davinci"
+            },
+            "type": "prompt",
+            "data": {
+                "prompt": "Help me draft a message to olivia regarding quarterly review",
+                "completion": {
+                    "completion_timestamp": "2025-03-31T21:34:44.568874",
+                    "response": "Here's a concerned message about quarterly review"
+                }
+            }
+        },
+        {
+            "timestamp": "2025-03-31T21:34:44.569073",
+            "tags": {},
+            "type": "query",
+            "data": {
+                "buffer_key": "test_serialization",
+                "op_name": "filter[how='any', tags={'event_type': ['notification']}](last[size=10](<buffer>))",
+                "matched_indices": [
+                    18
+                ]
+            }
+        },
+        {
+            "timestamp": "2025-03-31T21:34:44.569089",
+            "tags": {
+                "model": "gpt4",
+                "importance": "high"
+            },
+            "type": "prompt",
+            "data": {
+                "prompt": "What would you like to say to michael?",
+                "completion": {
+                    "completion_timestamp": "2025-03-31T21:34:44.569120",
+                    "response": "Here's a inquisitive message about sales strategy"
+                }
+            }
+        },
+        {
+            "timestamp": "2025-03-31T21:34:44.569318",
+            "tags": {},
+            "type": "query",
+            "data": {
+                "buffer_key": "test_serialization",
+                "op_name": "filter[how='any', tags={'event_type': ['alert']}](last[size=10](<buffer>))",
+                "matched_indices": []
+            }
+        },
+        {
+            "timestamp": "2025-03-31T21:34:44.569333",
+            "tags": {
+                "model": "llama"
+            },
+            "type": "prompt",
+            "data": {
+                "prompt": "Write a message to lisa about team collaboration",
+                "completion": null
+            }
+        },
+        {
+            "timestamp": "2025-03-31T21:34:44.569550",
+            "tags": {},
+            "type": "query",
+            "data": {
+                "buffer_key": "test_serialization",
+                "op_name": "filter[how='any', tags={'event_type': ['alert']}](last[size=10](<buffer>))",
+                "matched_indices": []
+            }
+        },
+        {
+            "timestamp": "2025-03-31T21:34:44.569571",
+            "tags": {
+                "event_type": "chat"
+            },
+            "type": "event",
+            "data": {
+                "payload": {
+                    "message": "Message 13 about the project",
+                    "from": "lisa",
+                    "to": "evan",
+                    "timestamp": "2025-03-31T15:22:44.569556"
+                }
+            }
+        },
+        {
+            "timestamp": "2025-03-31T21:34:44.569760",
+            "tags": {},
+            "type": "query",
+            "data": {
+                "buffer_key": "test_serialization",
+                "op_name": "filter[how='any', tags={'event_type': ['system']}](last[size=10](<buffer>))",
+                "matched_indices": []
+            }
+        }
+    ]
+}

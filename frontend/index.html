@@ -5,9 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Plomp Buffer Viewer</title>
-    <!-- External libraries -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
-    <!-- CSS_PLACEHOLDER -->
 </head>
 
 <body>
@@ -15,22 +13,13 @@
         <h2 style="margin: 4px 0; font-size: 14px;">Plomp Buffer Viewer</h2>
         <hr style="margin: 0 0 4px; border: none; border-top: 1px solid #ccc;" />
         <div id="stats-section" class="stats-section"></div>
-        <div id="loading-indicator" class="loading-indicator">
-            Loading, please wait...
-        </div>
-        <div class="filter-section">
-            <strong style="font-size: 12px;">Tags:</strong>
-            <div id="tag-filters" class="tag-filters"></div>
-        </div>
-
-        <div class="data-view">
-            <div id="timeline-view"></div>
-            <div id="details-sidebar" class="details-sidebar"></div>
-        </div>
+        <div id="app"></div>
     </div>
-    <script type="module">
+    <script>
         const plompData = __PLOMP_BUFFER_JSON__;
+    </script>
+    <script type="module">
+        import './src/main.tsx'; // Direct import of the entry point
     </script>    
-    <!-- JS_PLACEHOLDER -->
 </body>
 </html>
