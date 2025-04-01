@@ -6,6 +6,7 @@ interface TimelineItemProps {
   index: number;
   isSelected: boolean;
   isCurrent: boolean;
+  isMatched: boolean; // Add this prop
   onSelect: () => void;
 }
 
@@ -14,12 +15,13 @@ export function TimelineItem({
   index, 
   isSelected, 
   isCurrent, 
+  isMatched,
   onSelect 
 }: TimelineItemProps) {
   const timestamp = new Date(item.timestamp);
-  const formattedTime = timestamp.toLocaleTimeString();
+  const formattedTime = timestamp.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit', second: '2-digit'});
   
-  // Generate a summary based on the item type
+  // Generate a short summary based on the item type
   let summary = '';
   if (item.type === 'event') {
     const eventType = item.tags.event_type || 'unknown';
@@ -34,13 +36,18 @@ export function TimelineItem({
   }
   
   // Truncate summary if it's too long
-  if (summary.length > 100) {
-    summary = summary.substring(0, 97) + '...';
+  if (summary.length > 80) {
+    summary = summary.substring(0, 77) + '...';
   }
+  
+  // Get the most important tags (limit to 3 most relevant)
+  const priorityTags = Object.entries(item.tags)
+    .filter(([key]) => !['event_type', 'model'].includes(key)) // Skip tags already used in summary
+    .slice(0, 3);
   
   return (
     <div 
-      className={`timeline-item ${item.type} ${isSelected ? 'selected' : ''} ${isCurrent ? 'current' : ''}`}
+      className={`timeline-item ${item.type} ${isSelected ? 'selected' : ''} ${isCurrent ? 'current' : ''} ${isMatched ? 'matched' : ''}`}
       onClick={onSelect}
     >
       <div className="item-header">
@@ -48,13 +55,18 @@ export function TimelineItem({
         <div className="item-type">{item.type}</div>
       </div>
       <div className="item-summary">{summary}</div>
-      <div className="item-tags">
-        {Object.entries(item.tags).map(([key, value]) => (
-          <span key={key} className="tag">
-            {key}:{String(value)}
-          </span>
-        ))}
-      </div>
+      {priorityTags.length > 0 && (
+        <div className="item-tags">
+          {priorityTags.map(([key, value]) => (
+            <span key={key} className="tag">
+              {key}:{String(value)}
+            </span>
+          ))}
+          {Object.keys(item.tags).length > 3 && (
+            <span className="tag">+{Object.keys(item.tags).length - 3}</span>
+          )}
+        </div>
+      )}
     </div>
   );
 }

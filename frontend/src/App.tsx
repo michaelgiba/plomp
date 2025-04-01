@@ -15,6 +15,7 @@ export default function App() {
   const [state, setState] = useState<TimelineState>({
     items: sampleData.buffer_items,
     selectedItemIndex: null,
+    matchedIndices: [], // Initialize empty array for matched indices
     filters: {
       types: new Set(['event', 'query', 'prompt']),
       tags: {}
@@ -28,9 +29,20 @@ export default function App() {
 
   // Select an item from the timeline
   const selectItem = (index: number) => {
+    const item = state.items[index];
+    let matchedIndices: number[] = [];
+    
+    // If the selected item is a query, check for matched_indices
+    if (item && item.type === 'query' && item.data && item.data.matched_indices) {
+      matchedIndices = Array.isArray(item.data.matched_indices) 
+        ? item.data.matched_indices 
+        : [];
+    }
+    
     setState(prev => ({
       ...prev,
       selectedItemIndex: index,
+      matchedIndices: matchedIndices,
       playback: {
         ...prev.playback,
         currentIndex: index
@@ -188,6 +200,7 @@ export default function App() {
             items={filteredItems}
             selectedIndex={state.selectedItemIndex}
             currentIndex={state.playback.currentIndex}
+            matchedIndices={state.matchedIndices}
             onSelectItem={selectItem}
           />
           

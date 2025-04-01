@@ -6,6 +6,7 @@ interface TimelineViewProps {
   items: BufferItem[];
   selectedIndex: number | null;
   currentIndex: number;
+  matchedIndices: number[]; // Add matched indices prop
   onSelectItem: (index: number) => void;
 }
 
@@ -13,6 +14,7 @@ export function TimelineView({
   items, 
   selectedIndex, 
   currentIndex, 
+  matchedIndices,
   onSelectItem 
 }: TimelineViewProps) {
   return (
@@ -25,6 +27,7 @@ export function TimelineView({
             index={index}
             isSelected={selectedIndex === index}
             isCurrent={currentIndex === index}
+            isMatched={matchedIndices.includes(index)}
             onSelect={() => onSelectItem(index)}
           />
         ))}

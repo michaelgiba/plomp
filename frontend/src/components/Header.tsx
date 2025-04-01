@@ -17,10 +17,9 @@ export function Header({
 }: HeaderProps) {
   return (
     <header className="app-header">
-      <h1>Timeline Viewer</h1>
       <div className="filter-controls">
         <div className="type-filters">
-          <h3>Filter by Type</h3>
+          <h3>Types:</h3>
           <div className="filter-options">
             {['event', 'query', 'prompt'].map(type => (
               <label key={type} className="filter-option">
@@ -36,10 +35,9 @@ export function Header({
         </div>
         
         <div className="tag-filters">
-          <h3>Filter by Tags</h3>
           {Object.entries(availableTags).map(([tagKey, tagValues]) => (
             <div key={tagKey} className="tag-filter-group">
-              <h4>{tagKey}</h4>
+              <h4>{tagKey}:</h4>
               <div className="filter-options">
                 {Array.from(tagValues).map(tagValue => (
                   <label key={`${tagKey}-${tagValue}`} className="filter-option">

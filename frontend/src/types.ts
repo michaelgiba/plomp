@@ -8,6 +8,7 @@ export interface BufferItem {
 export interface TimelineState {
   items: BufferItem[];
   selectedItemIndex: number | null;
+  matchedIndices: number[]; // Add this to track items referenced by the selected query
   filters: {
     types: Set<string>;
     tags: Record<string, Set<string>>;
