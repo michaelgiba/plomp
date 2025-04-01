@@ -1,25 +1,24 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Plomp Buffer Viewer</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
-</head>
+  </head>
 
-<body>
+  <body>
     <div id="container">
-        <h2 style="margin: 4px 0; font-size: 14px;">Plomp Buffer Viewer</h2>
-        <hr style="margin: 0 0 4px; border: none; border-top: 1px solid #ccc;" />
-        <div id="stats-section" class="stats-section"></div>
-        <div id="app"></div>
+      <h2 style="margin: 4px 0; font-size: 14px">Plomp Buffer Viewer</h2>
+      <hr style="margin: 0 0 4px; border: none; border-top: 1px solid #ccc" />
+      <div id="stats-section" class="stats-section"></div>
+      <div id="app"></div>
     </div>
     <script>
-        const plompData = __PLOMP_BUFFER_JSON__;
+      const plompData = __PLOMP_BUFFER_JSON__;
     </script>
     <script type="module">
-        import './src/main.tsx'; // Direct import of the entry point
-    </script>    
-</body>
+      import "./src/main.tsx"; // Direct import of the entry point
+    </script>
+  </body>
 </html>

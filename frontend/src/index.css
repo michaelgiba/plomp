@@ -1,120 +1,120 @@
 body {
-    margin: 0;
-    font-family: sans-serif;
-    background-color: var(--color-bg, #f8f8f8);
-    color: var(--color-text, #333333);
-    /* Slightly smaller default font size */
-    font-size: 14px;
+  margin: 0;
+  font-family: sans-serif;
+  background-color: var(--color-bg, #f8f8f8);
+  color: var(--color-text, #333333);
+  /* Slightly smaller default font size */
+  font-size: 14px;
 }
 #container {
-    margin: 0 auto;
-    padding: 8px;
-    width: 100%;
-    max-width: 1200px;
+  margin: 0 auto;
+  padding: 8px;
+  width: 100%;
+  max-width: 1200px;
 }
 .controls {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px;
-    border-bottom: 1px solid #e0e0e0;
-    background-color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px;
+  border-bottom: 1px solid #e0e0e0;
+  background-color: #ffffff;
 }
 .data-view {
-    min-height: 400px;
-    border: 1px solid #e0e0e0;
-    overflow: auto;
-    padding: 8px;
-    position: relative;
-    background-color: #ffffff;
+  min-height: 400px;
+  border: 1px solid #e0e0e0;
+  overflow: auto;
+  padding: 8px;
+  position: relative;
+  background-color: #ffffff;
 }
 #timeline-view {
-    position: relative;
-    max-height: 600px;
-    overflow-y: auto;
+  position: relative;
+  max-height: 600px;
+  overflow-y: auto;
 }
 .timeline-item {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 .timeline-tooltip {
-    position: absolute;
-    background-color: #ffffff;
-    border: 1px solid #e0e0e0;
-    border-radius: 3px;
-    padding: 4px 6px;
-    font-size: 12px;
-    pointer-events: none;
-    max-width: 300px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    display: none;
-    color: #333;
+  position: absolute;
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 3px;
+  padding: 4px 6px;
+  font-size: 12px;
+  pointer-events: none;
+  max-width: 300px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: none;
+  color: #333;
 }
 .timeline-tooltip pre {
-    margin: 4px 0;
-    max-height: 150px;
-    overflow: auto;
+  margin: 4px 0;
+  max-height: 150px;
+  overflow: auto;
 }
 .timeline-details {
-    margin-top: 8px;
-    border: 1px solid #ccc;
-    padding: 8px;
-    background: #fff;
+  margin-top: 8px;
+  border: 1px solid #ccc;
+  padding: 8px;
+  background: #fff;
 }
 .filter-section {
-    padding: 8px;
-    border-top: 1px solid #ccc;
-    display: flex;
-    gap: 8px;
-    align-items: flex-start; /* Changed from center to flex-start */
-    flex-wrap: wrap; /* Allow the section to wrap if needed */
+  padding: 8px;
+  border-top: 1px solid #ccc;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start; /* Changed from center to flex-start */
+  flex-wrap: wrap; /* Allow the section to wrap if needed */
 }
 .tag-filters {
-    display: flex;
-    gap: 4px;
-    flex-wrap: wrap; /* Allow tags to wrap to next line */
-    max-width: 80%; /* Ensure tags don't push beyond reasonable width */
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap; /* Allow tags to wrap to next line */
+  max-width: 80%; /* Ensure tags don't push beyond reasonable width */
 }
 .tag-filter {
-    background: var(--color-bg, #f8f8f8);
-    border-radius: 3px;
-    font-size: 12px;
-    padding: 2px 6px;
-    cursor: pointer;
-    color: var(--color-text, #333333);
+  background: var(--color-bg, #f8f8f8);
+  border-radius: 3px;
+  font-size: 12px;
+  padding: 2px 6px;
+  cursor: pointer;
+  color: var(--color-text, #333333);
 }
 .tag-filter.active {
-    background: var(--color-primary, #4a6fe3);
-    color: var(--color-white, #ffffff);
-}        
+  background: var(--color-primary, #4a6fe3);
+  color: var(--color-white, #ffffff);
+}
 /* Sidebar for details (always visible) */
 .details-sidebar {
-    position: absolute;
-    right: 0;
-    top: 0;
-    font-size: 10px;
-    width: 400px;
-    height: 100%;
-    background: #fff;
-    border-left: 1px solid #ccc;
-    box-sizing: border-box;
-    padding: 8px;
-    overflow-y: auto;
-    display: none; /* hidden by default */
+  position: absolute;
+  right: 0;
+  top: 0;
+  font-size: 10px;
+  width: 400px;
+  height: 100%;
+  background: #fff;
+  border-left: 1px solid #ccc;
+  box-sizing: border-box;
+  padding: 8px;
+  overflow-y: auto;
+  display: none; /* hidden by default */
 }
 svg {
-    margin-top: 4px;
+  margin-top: 4px;
 }
 .loading-indicator {
-    display: none;
-    text-align: center;
-    font-size: 12px;
-    padding: 6px;
-    color: #444;
+  display: none;
+  text-align: center;
+  font-size: 12px;
+  padding: 6px;
+  color: #444;
 }
 .stats-section {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
 }

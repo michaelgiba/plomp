@@ -1,4 +1,4 @@
-import { h } from 'preact';
+import { h } from "preact";
 
 interface HeaderProps {
   availableTags: Record<string, Set<string>>;
@@ -8,12 +8,12 @@ interface HeaderProps {
   onToggleTag: (tagKey: string, tagValue: string) => void;
 }
 
-export function Header({ 
-  availableTags, 
-  selectedTypes, 
-  selectedTags, 
-  onToggleType, 
-  onToggleTag 
+export function Header({
+  availableTags,
+  selectedTypes,
+  selectedTags,
+  onToggleType,
+  onToggleTag,
 }: HeaderProps) {
   return (
     <header className="app-header">
@@ -21,7 +21,7 @@ export function Header({
         <div className="type-filters">
           <h3>Types:</h3>
           <div className="filter-options">
-            {['event', 'query', 'prompt'].map(type => (
+            {["event", "query", "prompt"].map((type) => (
               <label key={type} className="filter-option">
                 <input
                   type="checkbox"
@@ -33,14 +33,17 @@ export function Header({
             ))}
           </div>
         </div>
-        
+
         <div className="tag-filters">
           {Object.entries(availableTags).map(([tagKey, tagValues]) => (
             <div key={tagKey} className="tag-filter-group">
               <h4>{tagKey}:</h4>
               <div className="filter-options">
-                {Array.from(tagValues).map(tagValue => (
-                  <label key={`${tagKey}-${tagValue}`} className="filter-option">
+                {Array.from(tagValues).map((tagValue) => (
+                  <label
+                    key={`${tagKey}-${tagValue}`}
+                    className="filter-option"
+                  >
                     <input
                       type="checkbox"
                       checked={selectedTags[tagKey]?.has(tagValue) || false}

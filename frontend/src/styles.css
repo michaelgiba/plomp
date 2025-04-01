@@ -13,10 +13,13 @@
   --border-radius: 4px;
 }
 
-body, html {
+body,
+html {
   margin: 0;
   padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
+    sans-serif;
   background-color: var(--color-bg);
   color: var(--color-text);
 }
@@ -54,7 +57,8 @@ body, html {
   flex: 1;
 }
 
-.type-filters, .tag-filters {
+.type-filters,
+.tag-filters {
   display: flex;
   align-items: center;
   gap: 0.25rem;
@@ -112,23 +116,32 @@ body, html {
   overflow: hidden;
 }
 
-/* Playback controls */
+/* Enhanced Playback controls */
 .playback-controls {
   display: flex;
   justify-content: center;
-  padding: 0.25rem;
+  align-items: center;
+  padding: 0.5rem;
   background-color: #ffffff;
   border-bottom: 1px solid var(--color-border);
+  gap: 0.5rem;
 }
 
 .control-button {
   padding: 0.25rem 0.5rem;
-  margin: 0 0.15rem;
   border: 1px solid var(--color-border);
   background-color: white;
   border-radius: var(--border-radius);
   cursor: pointer;
-  font-size: 0.7rem;
+  font-size: 0.8rem;
+  min-width: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.control-button:hover:not(:disabled) {
+  background-color: var(--color-bg);
 }
 
 .control-button:disabled {
@@ -137,7 +150,35 @@ body, html {
 }
 
 .control-button.play-pause {
-  width: 80px;
+  width: 6rem;
+  font-weight: bold;
+  display: flex;
+  justify-content: center;
+  gap: 0.25rem;
+}
+
+.speed-control {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+}
+
+.speed-control select {
+  padding: 0.15rem 0.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  background-color: white;
+  font-size: 0.8rem;
+}
+
+.playback-progress {
+  font-size: 0.8rem;
+  color: var(--color-text);
+  margin-left: 0.5rem;
+  padding: 0.2rem 0.4rem;
+  background-color: var(--color-bg);
+  border-radius: var(--border-radius);
 }
 
 /* Timeline view */
@@ -206,7 +247,7 @@ body, html {
 }
 
 .timeline-item.matched::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -245,7 +286,6 @@ body, html {
 
 .prompt .item-type {
   color: var(--color-bg);
-
 }
 
 .item-summary {
@@ -279,6 +319,160 @@ body, html {
   border-left: 1px solid var(--color-border);
   padding: 1rem;
   overflow-y: auto;
+}
+
+/* Styling for matched items in detail sidebar */
+.matched-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.matched-item {
+  background-color: var(--color-sidebar-bg);
+  border-left: 3px solid var(--color-matched);
+  padding: 0.5rem;
+  border-radius: var(--border-radius);
+  font-size: 0.8rem;
+}
+
+.matched-item-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+}
+
+.matched-item-type {
+  font-weight: bold;
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  padding: 0.1rem 0.3rem;
+  border-radius: 2px;
+  font-size: 0.7rem;
+}
+
+.matched-item-time {
+  color: var(--color-text-light, #666);
+  font-size: 0.7rem;
+}
+
+.matched-item-summary {
+  font-size: 0.75rem;
+  color: var(--color-text);
+  line-height: 1.3;
+}
+
+/* Tag chips styling */
+.detail-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+}
+
+.detail-tag {
+  background-color: var(--color-bg);
+  border-radius: 12px;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--color-border);
+}
+
+.detail-tag-key {
+  font-weight: bold;
+  margin-right: 0.3rem;
+  color: var(--color-text);
+}
+
+.detail-tag-value {
+  color: var(--color-text);
+}
+
+/* Structured content sections */
+.structured-content {
+  margin-bottom: 1rem;
+}
+
+.content-section {
+  margin-bottom: 1rem;
+}
+
+.content-section-title {
+  font-size: 0.9rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  color: var(--color-text);
+}
+
+.content-item {
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+.content-item-label {
+  font-weight: bold;
+  display: block;
+  font-size: 0.8rem;
+  color: var(--color-text-light, #666);
+}
+
+.content-item-value {
+  font-size: 0.9rem;
+  display: block;
+  word-wrap: break-word;
+}
+
+/* JSON toggle button */
+.json-toggle {
+  display: flex;
+  align-items: center;
+  margin: 1rem 0;
+}
+
+.json-toggle-button {
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  padding: 0.3rem 0.8rem;
+  border-radius: var(--border-radius);
+  font-size: 0.8rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.json-toggle-button:hover {
+  background-color: #f0f0f0;
+}
+
+/* Content types specific styling */
+.event-content .content-item-value {
+  background-color: var(--color-event-bg, #f5eeff);
+  padding: 0.5rem;
+  border-radius: var(--border-radius);
+  border-left: 3px solid var(--color-event);
+}
+
+.query-content .content-item-value {
+  background-color: var(--color-query-bg, #fff0f0);
+  padding: 0.5rem;
+  border-radius: var(--border-radius);
+  border-left: 3px solid var(--color-query);
+}
+
+.prompt-content .content-item-value {
+  background-color: var(--color-prompt-bg, #fffaed);
+  padding: 0.5rem;
+  border-radius: var(--border-radius);
+  border-left: 3px solid var(--color-prompt);
+}
+
+/* Improved JSON data display */
+.json-data-container {
+  margin-top: 1rem;
 }
 
 .no-selection {
@@ -336,4 +530,37 @@ body, html {
   max-height: 300px;
   color: #333;
   border: 1px solid #e5e5e5;
+}
+
+/* Completion display styles */
+.completion-text {
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 300px;
+  overflow-y: auto;
+  background-color: var(--color-prompt-bg, #fffaed);
+  border-radius: var(--border-radius);
+  padding: 0.5rem;
+}
+
+.prompt-status {
+  font-size: 0.7rem;
+  padding: 0.2rem 0.4rem;
+  margin-left: 0.5rem;
+  border-radius: 3px;
+}
+
+.prompt-status.complete {
+  background-color: var(--color-secondary);
+  color: white;
+}
+
+.prompt-status.incomplete {
+  background-color: var(--color-query);
+  color: white;
+}
+
+.completion-missing {
+  font-style: italic;
+  color: #777;
 }

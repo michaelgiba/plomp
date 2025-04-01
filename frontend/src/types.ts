@@ -1,7 +1,7 @@
 export interface BufferItem {
   timestamp: string;
   tags: Record<string, string | string[]>;
-  type: 'event' | 'query' | 'prompt';
+  type: "event" | "query" | "prompt";
   data: any;
 }
 
