@@ -179,7 +179,6 @@ export function DetailSidebar({ item, allItems }: DetailSidebarProps) {
 
   // Render prompt-specific content
   const renderPromptContent = () => {
-    const model = item.tags.model || "Unknown";
     const promptText = item.data.prompt || "";
 
     // Improved completion extraction logic
@@ -228,11 +227,6 @@ export function DetailSidebar({ item, allItems }: DetailSidebarProps) {
             {isComplete && (
               <span className="prompt-status complete">Complete</span>
             )}
-          </div>
-
-          <div className="content-item">
-            <span className="content-item-label">Model</span>
-            <span className="content-item-value">{model}</span>
           </div>
 
           {promptText && (

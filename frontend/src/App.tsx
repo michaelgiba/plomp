@@ -1,6 +1,5 @@
 import { h } from "preact";
 import { useState, useEffect } from "preact/hooks";
-import sampleData from "./vite-plugins/sample-buffer-data.json";
 import "./styles.css";
 
 // Types
@@ -10,12 +9,19 @@ import { TimelineView } from "./components/TimelineView";
 import { DetailSidebar } from "./components/DetailSidebar";
 import { PlaybackControls } from "./components/PlaybackControls";
 
+// Declare the global window type extension
+declare global {
+  interface Window {
+    __PLOMP_BUFFER_JSON__: { buffer_items: BufferItem[] };
+  }
+}
+
 export default function App() {
-  // Initialize state with sample data
+  // Initialize state with data from global window variable
   const [state, setState] = useState<TimelineState>({
-    items: sampleData.buffer_items,
+    items: window.__PLOMP_BUFFER_JSON__?.buffer_items || [],
     selectedItemIndex: null,
-    matchedIndices: [], // Initialize empty array for matched indices
+    matchedIndices: [],
     filters: {
       types: new Set(["event", "query", "prompt"]),
       tags: {},
@@ -27,6 +33,7 @@ export default function App() {
     },
   });
 
+  // Rest of your code remains the same
   // Select an item from the timeline
   const selectItem = (index: number) => {
     const item = state.items[index];
@@ -231,7 +238,7 @@ export default function App() {
                 ? state.items[state.selectedItemIndex]
                 : null
             }
-            allItems={state.items} // Pass all items to access matched items by index
+            allItems={state.items}
           />
         </div>
       </div>

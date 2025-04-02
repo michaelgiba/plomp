@@ -176,4 +176,4 @@ def test_serialization(temp_html_file):
         content = f.read()
         assert len(content) > 0
 
-    plomp.write_html(buffer, "/home/michaelgiba/out.html")
+    plomp.write_html(buffer, "/home/michaelgiba/out1.html")

@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 from functools import cache
 
+
 @cache
 def _global_config():
     root_dir = Path(__file__).parent.parent.absolute()
@@ -18,6 +19,7 @@ def _global_config():
         "DIST_DIR": root_dir / "frontend" / "dist",
         "TARGET_DIR": root_dir / "plomp" / "resources" / "templates",
     }
+
 
 def print_colored(message, color="green"):
     colors = {
@@ -71,13 +73,11 @@ def install_dependencies():
         return False
 
 
-def build_frontend(production=True):
+def build_frontend():
     print_colored("Building frontend...", "blue")
     os.chdir(_global_config()["FRONTEND_DIR"])
 
     build_cmd = ["npm", "run", "build"]
-    if not production:
-        build_cmd = ["npm", "run", "build:dev"]
 
     try:
         subprocess.run(build_cmd, check=True)
@@ -105,6 +105,7 @@ def copy_bundle():
     print_colored(f"Self-contained HTML copied to {target_html}", "green")
     return True
 
+
 def main():
     print_colored("Starting frontend compilation process...", "magenta")
 
@@ -120,15 +121,10 @@ def main():
         )
         return 1
 
-    production_mode = True
-    if len(sys.argv) > 1 and sys.argv[1] == "--dev":
-        production_mode = False
-        print_colored("Using development mode", "yellow")
-
     if not install_dependencies():
         return 1
 
-    if not build_frontend(production=production_mode):
+    if not build_frontend():
         return 1
 
     if not copy_bundle():

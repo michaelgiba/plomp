@@ -9,7 +9,7 @@
       "type": "event",
       "data": {
         "payload": {
-          "message": "Message 0 about vacation plans",
+          "message": "Message 2 about vacation plans",
           "from": "olivia",
           "to": "victor",
           "timestamp": "2025-03-31T05:31:44.566574"
@@ -28,9 +28,7 @@
     },
     {
       "timestamp": "2025-03-31T21:34:44.566812",
-      "tags": {
-        "model": "bloom"
-      },
+      "tags": {},
       "type": "prompt",
       "data": {
         "prompt": "Help me draft a message to bob regarding customer support",

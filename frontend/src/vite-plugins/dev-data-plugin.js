@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 
 /**
- * Plugin to replace __PLOMP_BUFFER_JSON__ with development data in dev mode
+ * Plugin to set __PLOMP_BUFFER_JSON__ with development data in dev mode
  */
 export function plompDevDataPlugin() {
   return {
@@ -16,9 +16,13 @@ export function plompDevDataPlugin() {
             __dirname,
             "./sample-buffer-data.json",
           );
+
           try {
             const data = fs.readFileSync(devDataPath, "utf-8");
-            return html.replace("__PLOMP_BUFFER_JSON__", data);
+            return html.replace(
+              "<!-- insert plomp JSON data here -->",
+              "window.__PLOMP_BUFFER_JSON__ = " + data + ";",
+            );
           } catch (error) {
             console.error("Error reading dev data file:", error);
             return html;

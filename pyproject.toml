@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "plomp"
-version = "0.1.0"
+version = "0.1.1"
 description = "Plomp Python Module"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -14,7 +14,6 @@ authors = [
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "License :: OSI Approved :: MIT License",
@@ -44,6 +43,7 @@ dev = [
 include-package-data = true
 package-data = {"plomp" = ["resources/**/*"]}
 exclude-package-data = {"plomp" = ["**/node_modules", "**/frontend", "**/ts", "**/*.ts"]}
+packages = ["plomp"]
 
 
 [tool.poetry.packages]

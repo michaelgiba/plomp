@@ -29,25 +29,19 @@ export function TimelineItem({
   let summary = "";
   if (item.type === "event") {
     const eventType = item.tags.event_type || "unknown";
-    const message = item.data.payload?.message || "";
-    summary = `${eventType}: ${message}`;
+    const context = item.data.payload?.context || "";
+    summary = `${eventType}: ${context}`;
   } else if (item.type === "query") {
-    summary = item.data.op_name || "Query operation";
+    summary = `query: ${item.data.op_name}` || "Query operation";
   } else if (item.type === "prompt") {
-    const model = item.tags.model || "unknown";
     const promptText = item.data.prompt || "";
-    summary = `${model}: ${promptText}`;
+    summary = `prompt: "${promptText}"`;
   }
 
   // Truncate summary if it's too long
   if (summary.length > 80) {
     summary = summary.substring(0, 77) + "...";
   }
-
-  // Get the most important tags (limit to 3 most relevant)
-  const priorityTags = Object.entries(item.tags)
-    .filter(([key]) => !["event_type", "model"].includes(key)) // Skip tags already used in summary
-    .slice(0, 3);
 
   // Check if prompt is incomplete (has no completion/response)
   const isIncompletePrompt =
@@ -71,18 +65,6 @@ export function TimelineItem({
         </div>
       </div>
       <div className="item-summary">{summary}</div>
-      {priorityTags.length > 0 && (
-        <div className="item-tags">
-          {priorityTags.map(([key, value]) => (
-            <span key={key} className="tag">
-              {key}:{String(value)}
-            </span>
-          ))}
-          {Object.keys(item.tags).length > 3 && (
-            <span className="tag">+{Object.keys(item.tags).length - 3}</span>
-          )}
-        </div>
-      )}
     </div>
   );
 }
