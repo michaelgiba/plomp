@@ -1,14 +1,7 @@
-import http.server
 import importlib.resources
 import json
-import os
-import shutil
-import socketserver
-import tempfile
-import threading
-import time
 
-from plomp.core import PlompBuffer
+from plomp._core import PlompBuffer
 
 
 def _get_template_file(filename):

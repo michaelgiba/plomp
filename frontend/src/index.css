@@ -1,120 +1,236 @@
 body {
   margin: 0;
-  font-family: sans-serif;
-  background-color: var(--color-bg, #f8f8f8);
+  font-family: var(
+    --font-sans,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif
+  );
+  background-color: var(--color-bg, #f9f8f5);
   color: var(--color-text, #333333);
-  /* Slightly smaller default font size */
   font-size: 14px;
+  line-height: 1.5;
+  overflow-x: hidden;
 }
+
 #container {
   margin: 0 auto;
-  padding: 8px;
+  padding: 12px;
   width: 100%;
   max-width: 1200px;
 }
+
 .controls {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px;
-  border-bottom: 1px solid #e0e0e0;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--color-border, #e0ddd4);
   background-color: #ffffff;
+  border-radius: 3px 3px 0 0;
 }
+
 .data-view {
   min-height: 400px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--color-border, #e0ddd4);
   overflow: auto;
-  padding: 8px;
+  padding: 12px;
   position: relative;
   background-color: #ffffff;
+  border-radius: 0 0 3px 3px;
 }
+
 #timeline-view {
   position: relative;
   max-height: 600px;
   overflow-y: auto;
 }
+
 .timeline-item {
   cursor: pointer;
+  transition: transform 0.2s ease;
+  margin-bottom: 1px;
+  line-height: 1.2;
+}
+
+.timeline-item:hover {
+  transform: translateY(-1px);
 }
 
 .timeline-tooltip {
   position: absolute;
   background-color: #ffffff;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--color-border, #e0ddd4);
   border-radius: 3px;
-  padding: 4px 6px;
+  padding: 8px 10px;
   font-size: 12px;
   pointer-events: none;
   max-width: 300px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
   display: none;
-  color: #333;
+  color: var(--color-text, #333333);
+  z-index: 100;
 }
+
 .timeline-tooltip pre {
-  margin: 4px 0;
+  margin: 6px 0;
   max-height: 150px;
   overflow: auto;
+  background-color: #f6f6f3;
+  padding: 6px;
+  border-radius: 3px;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  border: 1px solid #e5e5e5;
 }
+
 .timeline-details {
-  margin-top: 8px;
-  border: 1px solid #ccc;
-  padding: 8px;
+  margin-top: 12px;
+  border: 1px solid var(--color-border, #e0ddd4);
+  padding: 12px;
   background: #fff;
+  border-radius: 3px;
 }
+
 .filter-section {
-  padding: 8px;
-  border-top: 1px solid #ccc;
+  padding: 12px;
+  border-top: 1px solid var(--color-border, #e0ddd4);
   display: flex;
-  gap: 8px;
-  align-items: flex-start; /* Changed from center to flex-start */
-  flex-wrap: wrap; /* Allow the section to wrap if needed */
+  gap: 10px;
+  align-items: flex-start;
+  flex-wrap: wrap;
 }
+
 .tag-filters {
   display: flex;
-  gap: 4px;
-  flex-wrap: wrap; /* Allow tags to wrap to next line */
-  max-width: 80%; /* Ensure tags don't push beyond reasonable width */
+  gap: 6px;
+  flex-wrap: wrap;
+  max-width: 80%;
 }
+
 .tag-filter {
-  background: var(--color-bg, #f8f8f8);
+  background: var(--color-bg, #f9f8f5);
   border-radius: 3px;
   font-size: 12px;
-  padding: 2px 6px;
+  padding: 4px 8px;
   cursor: pointer;
   color: var(--color-text, #333333);
+  border: 1px solid var(--color-border, #e0ddd4);
+  transition: all 0.2s ease;
 }
+
+.tag-filter:hover {
+  background-color: #edece8;
+  border-color: #d0cec5;
+}
+
 .tag-filter.active {
-  background: var(--color-primary, #4a6fe3);
-  color: var(--color-white, #ffffff);
+  background: var(--color-primary, #5677b9);
+  color: #ffffff;
+  border-color: var(--color-primary, #5677b9);
 }
-/* Sidebar for details (always visible) */
+
+/* Sidebar for details */
 .details-sidebar {
   position: absolute;
   right: 0;
   top: 0;
-  font-size: 10px;
+  font-size: 12px;
   width: 400px;
   height: 100%;
   background: #fff;
-  border-left: 1px solid #ccc;
+  border-left: 1px solid var(--color-border, #e0ddd4);
   box-sizing: border-box;
-  padding: 8px;
+  padding: 12px;
   overflow-y: auto;
-  display: none; /* hidden by default */
+  display: none;
+  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.03);
 }
+
 svg {
-  margin-top: 4px;
+  margin-top: 6px;
+  overflow: visible;
 }
+
 .loading-indicator {
   display: none;
   text-align: center;
-  font-size: 12px;
-  padding: 6px;
-  color: #444;
+  font-size: 13px;
+  padding: 8px;
+  color: var(--color-text-light, #666666);
 }
+
 .stats-section {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 4px;
+  gap: 10px;
+  margin-bottom: 6px;
+  font-size: 13px;
+  color: var(--color-text-light, #666666);
+}
+
+/* Add new academic paper inspired styles */
+a {
+  color: var(--color-primary, #5677b9);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+h1 a:hover,
+h2 a:hover,
+h3 a:hover {
+  text-decoration: none;
+  border-bottom: none;
+}
+
+.section-title {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 8px;
+  color: var(--color-text, #333333);
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--color-border, #e0ddd4);
+}
+
+/* Form controls with better styling */
+select,
+button {
+  font-family: var(
+    --font-sans,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif
+  );
+  font-size: 13px;
+  padding: 4px 8px;
+  border: 1px solid var(--color-border, #e0ddd4);
+  border-radius: 3px;
+  background-color: #ffffff;
+}
+
+select:focus,
+button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(86, 119, 185, 0.3);
+}
+
+button {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+button:hover {
+  background-color: var(--color-bg, #f9f8f5);
 }
