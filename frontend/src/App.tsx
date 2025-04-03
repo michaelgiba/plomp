@@ -33,10 +33,9 @@ export default function App() {
     },
   });
 
-  // Rest of your code remains the same
   // Select an item from the timeline
-  const selectItem = (index: number) => {
-    const item = state.items[index];
+  const selectItem = (index: number, originalIndex: number) => {
+    const item = state.items[originalIndex];
     let matchedIndices: number[] = [];
 
     // If the selected item is a query, check for matched_indices
@@ -53,40 +52,56 @@ export default function App() {
 
     setState((prev) => ({
       ...prev,
-      selectedItemIndex: index,
+      selectedItemIndex: originalIndex,
       matchedIndices: matchedIndices,
       playback: {
         ...prev.playback,
-        currentIndex: index,
+        currentIndex: index, // Keep track of the filtered index for playback
       },
     }));
   };
 
-  // Apply filtering to timeline items
-  const filteredItems = state.items.filter((item) => {
-    // Filter by type
-    if (!state.filters.types.has(item.type)) return false;
+  // Apply filtering to timeline items and maintain original indices
+  const filteredItemsWithIndices = state.items
+    .map((item, index) => ({ item, originalIndex: index }))
+    .filter(({ item }) => {
+      // Filter by type
+      if (!state.filters.types.has(item.type)) return false;
 
-    // Filter by tags
-    for (const [tagKey, tagValues] of Object.entries(state.filters.tags)) {
-      if (tagValues.size === 0) continue;
+      // Filter by tags
+      for (const [tagKey, tagValues] of Object.entries(state.filters.tags)) {
+        if (tagValues.size === 0) continue;
 
-      // If the item doesn't have this tag, filter it out
-      if (!item.tags[tagKey]) return false;
+        // If the item doesn't have this tag, filter it out
+        if (!item.tags[tagKey]) return false;
 
-      // If the item has the tag but not with a value we want, filter it out
-      const itemTagValue = item.tags[tagKey];
-      const tagValuesArray = Array.from(tagValues);
+        // If the item has the tag but not with a value we want, filter it out
+        const itemTagValue = item.tags[tagKey];
+        const tagValuesArray = Array.from(tagValues);
 
-      if (Array.isArray(itemTagValue)) {
-        if (!itemTagValue.some((v) => tagValuesArray.includes(v))) return false;
-      } else if (!tagValuesArray.includes(itemTagValue)) {
-        return false;
+        if (Array.isArray(itemTagValue)) {
+          if (!itemTagValue.some((v) => tagValuesArray.includes(v)))
+            return false;
+        } else if (!tagValuesArray.includes(itemTagValue)) {
+          return false;
+        }
       }
-    }
 
-    return true;
-  });
+      return true;
+    });
+
+  // Extract just the items for components that don't need the original indices
+  const filteredItems = filteredItemsWithIndices.map(({ item }) => item);
+
+  // Map from filtered index to original index
+  const originalIndices = filteredItemsWithIndices.map(
+    ({ originalIndex }) => originalIndex,
+  );
+
+  // Find the filtered index that corresponds to the selected original index
+  const filteredSelectedIndex = originalIndices.findIndex(
+    (origIndex) => origIndex === state.selectedItemIndex,
+  );
 
   // Toggle type filter
   const toggleTypeFilter = (type: string) => {
@@ -145,13 +160,15 @@ export default function App() {
 
   const handleStepForward = () => {
     if (state.playback.currentIndex < filteredItems.length - 1) {
-      const nextIndex = state.playback.currentIndex + 1;
+      const nextFilteredIndex = state.playback.currentIndex + 1;
+      const nextOriginalIndex = originalIndices[nextFilteredIndex];
+
       setState((prev) => ({
         ...prev,
-        selectedItemIndex: nextIndex,
+        selectedItemIndex: nextOriginalIndex,
         playback: {
           ...prev.playback,
-          currentIndex: nextIndex,
+          currentIndex: nextFilteredIndex,
         },
       }));
     }
@@ -159,22 +176,26 @@ export default function App() {
 
   const handleStepBackward = () => {
     if (state.playback.currentIndex > 0) {
-      const prevIndex = state.playback.currentIndex - 1;
+      const prevFilteredIndex = state.playback.currentIndex - 1;
+      const prevOriginalIndex = originalIndices[prevFilteredIndex];
+
       setState((prev) => ({
         ...prev,
-        selectedItemIndex: prevIndex,
+        selectedItemIndex: prevOriginalIndex,
         playback: {
           ...prev.playback,
-          currentIndex: prevIndex,
+          currentIndex: prevFilteredIndex,
         },
       }));
     }
   };
 
   const handleChangeIndex = (index: number) => {
+    const originalIndex = originalIndices[index];
+
     setState((prev) => ({
       ...prev,
-      selectedItemIndex: index,
+      selectedItemIndex: originalIndex,
       playback: {
         ...prev.playback,
         currentIndex: index,
@@ -226,9 +247,16 @@ export default function App() {
         <div className="content-area">
           <TimelineView
             items={filteredItems}
-            selectedIndex={state.selectedItemIndex}
+            originalIndices={originalIndices}
+            selectedIndex={
+              filteredSelectedIndex !== -1 ? filteredSelectedIndex : null
+            }
             currentIndex={state.playback.currentIndex}
-            matchedIndices={state.matchedIndices}
+            matchedIndices={state.matchedIndices
+              .map((origIndex) =>
+                originalIndices.findIndex((idx) => idx === origIndex),
+              )
+              .filter((idx) => idx !== -1)}
             onSelectItem={selectItem}
           />
 

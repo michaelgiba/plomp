@@ -6,14 +6,16 @@ import { setupTimelineKeyboardNavigation } from "../utils/keyboardNavigation";
 
 interface TimelineViewProps {
   items: BufferItem[];
+  originalIndices: number[]; // Add this prop
   selectedIndex: number | null;
   currentIndex: number;
-  matchedIndices: number[]; // Add matched indices prop
-  onSelectItem: (index: number) => void;
+  matchedIndices: number[];
+  onSelectItem: (index: number, originalIndex: number) => void; // Update signature
 }
 
 export function TimelineView({
   items,
+  originalIndices,
   selectedIndex,
   currentIndex,
   matchedIndices,
@@ -29,15 +31,19 @@ export function TimelineView({
       return Array.from(timelineRef.current.querySelectorAll(".timeline-item"));
     };
 
-    // Set up keyboard navigation and get cleanup function
+    // Set up keyboard navigation with modified handler
     const cleanup = setupTimelineKeyboardNavigation(
       getTimelineItems,
-      onSelectItem,
+      (index) => {
+        if (index >= 0 && index < originalIndices.length) {
+          onSelectItem(index, originalIndices[index]);
+        }
+      },
     );
 
     // Clean up event listener on unmount
     return cleanup;
-  }, [onSelectItem]);
+  }, [onSelectItem, originalIndices]);
 
   // Scroll selected item into view when selection changes
   useEffect(() => {
@@ -60,10 +66,11 @@ export function TimelineView({
             key={index}
             item={item}
             index={index}
+            originalIndex={originalIndices[index]}
             isSelected={selectedIndex === index}
             isCurrent={currentIndex === index}
             isMatched={matchedIndices.includes(index)}
-            onSelect={() => onSelectItem(index)}
+            onSelect={() => onSelectItem(index, originalIndices[index])}
           />
         ))}
       </div>

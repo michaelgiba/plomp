@@ -4,6 +4,8 @@ import textwrap
 from functools import cache, partial, wraps
 from typing import Callable
 
+from typeguard import typechecked
+
 from plomp.core import (
     PlompBuffer,
     PlompBufferItemType,
@@ -118,6 +120,10 @@ def _validate_wrap_kwargs(
         )
 
 
+_MISSING = object()
+
+
+@typechecked
 def wrap_prompt_fn(
     *,
     prompt_arg: int | None = None,
@@ -135,15 +141,19 @@ def wrap_prompt_fn(
     )
 
     def _capture_from_arg_i(i, /, fn, *args, **kwargs) -> str:
-        return args[i]
+        try:
+            return args[i]
+        except IndexError as e:
+            raise PlompMisconfiguration(f"Could not capture prompt for arg{i}") from e
 
-    def _capture_prompt_from_kwarg(kwarg, /, fn, *args, **kwargs) -> str:
-        return kwargs[kwarg]
+    def _capture_prompt_from_kwarg(kwarg, /, fn, *args, **kwargs) -> str | object:
+        return kwargs.get(kwarg, _MISSING)
 
     def _capture_prompts_with_options(capture_fns, /, fn, *args, **kwargs) -> str:
         for capture_fn in capture_fns:
-            with contextlib.suppress(KeyError, IndexError):
-                return capture_fn(fn, *args, **kwargs)
+            result = capture_fn(fn, *args, **kwargs)
+            if result is not _MISSING:
+                return result
 
         raise PlompMisconfiguration("Could not capture prompt given parameters.")
 
@@ -179,13 +189,11 @@ def wrap_prompt_fn(
     def capture_tags(fn, *args, **kwargs) -> TagsType:
         tags: TagsType = {}
         for arg_i, arg_tag_name in capture_tag_args.items():
-            # TODO: Handle when the arg value itself is `None`
-            if arg_tag := _capture_from_arg_i(arg_i, fn, *args, **kwargs):
-                tags[arg_tag_name] = arg_tag
+            tags[arg_tag_name] = _capture_from_arg_i(arg_i, fn, *args, **kwargs)
 
         for kwarg in capture_tag_kwargs:
-            # TODO: Handle when the kwarg value itself is `None`
-            if kwarg_tag := kwargs.get(kwarg):
+            kwarg_tag = kwargs.get(kwarg, _MISSING)
+            if kwarg_tag is not _MISSING:
                 tags[kwarg] = kwarg_tag
 
         return tags

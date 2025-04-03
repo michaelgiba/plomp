@@ -4,6 +4,7 @@ import { BufferItem } from "../types";
 interface TimelineItemProps {
   item: BufferItem;
   index: number;
+  originalIndex: number; // Add this prop
   isSelected: boolean;
   isCurrent: boolean;
   isMatched: boolean; // Add this prop
@@ -13,6 +14,7 @@ interface TimelineItemProps {
 export function TimelineItem({
   item,
   index,
+  originalIndex,
   isSelected,
   isCurrent,
   isMatched,

@@ -277,3 +277,10 @@ def test_failures_of_wrapping():
 
     with pytest.raises(plomp.PlompMisconfiguration):
         prompt_fn2("what is your name?")
+
+    @plomp.wrap_prompt_fn(prompt_arg=1)
+    def prompt_fn3(*, kwarg_only: str) -> str:
+        raise NotImplementedError()
+
+    with pytest.raises(plomp.PlompMisconfiguration):
+        prompt_fn3("who are you?")

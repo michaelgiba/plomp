@@ -232,7 +232,10 @@ export function DetailSidebar({ item, allItems }: DetailSidebarProps) {
           {promptText && (
             <div className="content-item">
               <span className="content-item-label">Prompt</span>
-              <span className="content-item-value prompt-text">
+              <span
+                className="content-item-value prompt-text"
+                style={{ whiteSpace: "pre-wrap" }}
+              >
                 {promptText}
               </span>
             </div>

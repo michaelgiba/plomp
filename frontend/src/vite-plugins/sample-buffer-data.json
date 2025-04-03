@@ -31,7 +31,7 @@
       "tags": {},
       "type": "prompt",
       "data": {
-        "prompt": "Help me draft a message to bob regarding customer support",
+        "prompt": "Help me draft a message to bob regarding customer support\nHelp me draft a message to bob regarding customer support\nHelp me draft a message to bob regarding customer support\n",
         "completion": {
           "completion_timestamp": "2025-03-31T21:34:44.566845",
           "response": "Here's a humorous message about customer support"
