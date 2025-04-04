@@ -30,9 +30,9 @@ export function TimelineItem({
   // Generate a short summary based on the item type
   let summary = "";
   if (item.type === "event") {
-    const eventType = item.tags.event_type || "unknown";
-    const context = item.data.payload?.context || "";
-    summary = `${eventType}: ${context}`;
+    const eventType = item.data.payload?.plomp_display_event_type || "unknown";
+    const plomp_display_text = item.data.payload?.plomp_display_text || "";
+    summary = `${eventType}: ${plomp_display_text}`;
   } else if (item.type === "query") {
     summary = `query: ${item.data.op_name}` || "Query operation";
   } else if (item.type === "prompt") {

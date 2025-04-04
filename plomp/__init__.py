@@ -70,9 +70,16 @@ def _trace_decorator(
     buffer: PlompBuffer | None = None,
 ):
     @wraps(fn)
-    def inner(*args, **kwargs):
+    def inner(*args, plomp_extra_tags: TagsType | None = None, **kwargs):
+        plomp_extra_tags = plomp_extra_tags or {}
+        assert isinstance(plomp_extra_tags, dict), (
+            "Invalid argument passed for `plomp_extra_tags`"
+        )
+
         prompt = capture_prompt(fn, *args, **kwargs)
-        tags = capture_tags(fn, *args, **kwargs)
+        tags = capture_tags(
+            fn, *args, plomp_extra_tags=plomp_extra_tags or {}, **kwargs
+        )
         handle = record_prompt(prompt, tags=tags, buffer=buffer)
         result = fn(*args, **kwargs)
         handle.complete(result)
@@ -115,6 +122,23 @@ def _validate_wrap_kwargs(
                 f"""
             Keyword argument '{prompt_kwarg}' cannot be used as both prompt source and tag source
         """
+            )
+        )
+
+    if any(
+        [
+            (
+                capture_tag_kwargs is not None
+                and "plomp_extra_tags" in capture_tag_kwargs
+            ),
+            (prompt_kwarg is not None and "plomp_extra_tags" in prompt_kwarg),
+        ]
+    ):
+        raise PlompMisconfiguration(
+            textwrap.dedent(
+                """
+            Keyword argument 'plomp_extra_tags' is a special argument and cannot be supplied as a
+            capture kwarg"""
             )
         )
 
@@ -184,7 +208,7 @@ def wrap_prompt_fn(
             "You cannot use the same argument as both a positional and keyword tag source"
         )
 
-    def capture_tags(fn, *args, **kwargs) -> TagsType:
+    def capture_tags(fn, *args, plomp_extra_tags: TagsType, **kwargs) -> TagsType:
         tags: TagsType = {}
         for arg_i, arg_tag_name in capture_tag_args.items():
             tags[arg_tag_name] = _capture_from_arg_i(arg_i, fn, *args, **kwargs)
@@ -193,6 +217,9 @@ def wrap_prompt_fn(
             kwarg_tag = kwargs.get(kwarg, _MISSING)
             if kwarg_tag is not _MISSING:
                 tags[kwarg] = kwarg_tag
+
+        for explicit_tag_key, explicit_tag_value in plomp_extra_tags.items():
+            tags[explicit_tag_key] = explicit_tag_value
 
         return tags
 

@@ -41,9 +41,10 @@ export function DetailSidebar({ item, allItems }: DetailSidebarProps) {
   // Get a summary description for an item (used for matched items)
   const getItemSummary = (item: BufferItem): string => {
     if (item.type === "event") {
-      const eventType = item.tags.event_type || "unknown";
-      const message = item.data.payload?.message || "";
-      return `${eventType}: ${message}`;
+      const eventType =
+        item.data.payload?.plomp_display_event_type || "unknown";
+      const plomp_display_text = item.data.payload?.plomp_display_text || "";
+      return `${eventType}: ${plomp_display_text}`;
     } else if (item.type === "query") {
       return item.data.op_name || "Query operation";
     } else if (item.type === "prompt") {
@@ -70,8 +71,8 @@ export function DetailSidebar({ item, allItems }: DetailSidebarProps) {
 
   // Render event-specific content
   const renderEventContent = () => {
-    const eventType = item.tags.event_type || "Unknown";
-    const message = item.data.payload?.message || "";
+    const eventType = item.data.payload?.plomp_display_event_type || "Unknown";
+    const plomp_display_text = item.data.payload?.plomp_display_text || "";
     const metadata = item.data.metadata || {};
 
     return (
@@ -82,10 +83,10 @@ export function DetailSidebar({ item, allItems }: DetailSidebarProps) {
             <span className="content-item-label">Event Type</span>
             <span className="content-item-value">{eventType}</span>
           </div>
-          {message && (
+          {plomp_display_text && (
             <div className="content-item">
-              <span className="content-item-label">Message</span>
-              <span className="content-item-value">{message}</span>
+              <span className="content-item-label">Display Text</span>
+              <span className="content-item-value">{plomp_display_text}</span>
             </div>
           )}
         </div>

@@ -262,8 +262,28 @@ def test_intersection():
     assert len(bob_speaker.intersection(alice_friend)) == 1
 
 
-def test_failures_of_wrapping():
+def test_explicit_tags():
+    buffer = mock_buffer("test_explicit_tags")
 
+    @plomp.wrap_prompt_fn(buffer=buffer, capture_tag_kwargs={"speaker", "friend"})
+    def prompt_fn(prompt: str, *, mock_return_value: str, **kwargs) -> str:
+        return mock_return_value
+
+    prompt_fn("What is 1 + 1", mock_return_value="2", speaker="bob")
+    prompt_fn("What is 1 + 3", mock_return_value="4", speaker="bob", friend="alice")
+    prompt_fn(
+        "What is 2 + 3",
+        mock_return_value="5",
+        speaker="bob",
+        plomp_extra_tags={"answer": 42},
+    )
+    prompt_fn("What is 7 + 3", mock_return_value="10", plomp_extra_tags={"answer": 42})
+
+    answers = buffer.filter(tags_filter={"friend": "alice", "answer": 42}, how="any")
+    assert len(answers) == 3
+
+
+def test_failures_of_wrapping():
     @plomp.wrap_prompt_fn()
     def prompt_fn1() -> str:
         raise NotImplementedError()
@@ -284,3 +304,15 @@ def test_failures_of_wrapping():
 
     with pytest.raises(plomp.PlompMisconfiguration):
         prompt_fn3("who are you?")
+
+    with pytest.raises(plomp.PlompMisconfiguration):
+
+        @plomp.wrap_prompt_fn(prompt_kwarg="plomp_extra_tags")
+        def prompt_fn4(*, prompt_kwarg: str) -> str:
+            raise NotImplementedError()
+
+    with pytest.raises(plomp.PlompMisconfiguration):
+
+        @plomp.wrap_prompt_fn(capture_tag_kwargs={"plomp_extra_tags"})
+        def prompt_fn5() -> str:
+            raise NotImplementedError()

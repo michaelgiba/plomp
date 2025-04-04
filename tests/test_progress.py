@@ -1,11 +1,6 @@
-import datetime as dt
-import io
-import json
 import os
 import random
-import sys
 import tempfile
-import textwrap
 from datetime import datetime, timedelta
 
 import pytest
@@ -148,7 +143,8 @@ def test_serialization(temp_html_file):
             recipient = random.choice([n for n in names if n != sender])
 
             payload = {
-                "message": f"Message {i} about {random.choice(topics)}",
+                "plomp_display_event_type": "sent_message",
+                "plomp_display_text": f"Message {i} about {random.choice(topics)}",
                 "from": sender,
                 "to": recipient,
                 "timestamp": (
@@ -176,4 +172,38 @@ def test_serialization(temp_html_file):
         content = f.read()
         assert len(content) > 0
 
-    plomp.write_html(buffer, "/home/michaelgiba/out1.html")
+
+def test_readme_example(temp_html_file):
+    buffer = plomp.buffer(key="test_readme_example")
+
+    @plomp.wrap_prompt_fn(buffer=buffer)
+    def prompt_llm(prompt: str) -> str:
+        return "<EXAMPLE LLM RESPONSE>"
+
+    _ = prompt_llm("What's the weather today?")
+
+    for i in range(4):
+        plomp.record_event(
+            {
+                "plomp_display_event_type": "weather_data_accessed",
+                "plomp_display_text": f"accessed weather data from API: {i + 1}/10",
+                "value": random.random(),
+            },
+            tags={"tool": "weather_api"},
+            buffer=buffer,
+        )
+
+    past_weather_events = buffer.filter(tags_filter={"tool": ["weather_api"]}).last(3)
+    past_weather_events.record(tags={"type": "recent_weather_queries"})
+
+    _ = prompt_llm(
+        "How has the temperature changed over the last three samples?: "
+        + str(past_weather_events.to_dict())
+    )
+
+    plomp.write_html(buffer, temp_html_file)
+
+    # Verify the file contains expected elements
+    with open(temp_html_file, "r", encoding="utf-8") as f:
+        content = f.read()
+        assert len(content) > 0
