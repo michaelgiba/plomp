@@ -2,12 +2,12 @@
 
 A small python module for managing and debugging agent contexts.
 
-Just `plomp` it in and *prompt* away!
+Just `plomp` it in and *prompt* away and get progress tracking and visibility into what your agents.
 
 
 # Overview
 
-Plomp is a tiny library designed to easily integrate into python programs which invoke an LLM over multiple 
+**Plomp** is a tiny library designed to easily integrate into python programs which invoke an LLM over multiple 
 steps and provide some useful benefits such as visualizing progress and making context retrival easier.
 
 Plomp has three main goals:
@@ -18,7 +18,7 @@ Plomp has three main goals:
 
 # Example Usage
 
-For a richer example look at the example project which simulates the game surivivor at https://michaelgiba.github.io/survivor/static/plomp.html with the repo here https://github.com/michaelgiba/survivor
+For a detailed example look I have a sample project which simulates the game survivor which uses `plomp`, the rendered progress can be seen here **[https://michaelgiba.github.io/survivor/static/plomp.html](https://michaelgiba.github.io/survivor/static/plomp.html)** with the repo here [https://github.com/michaelgiba/survivor](https://github.com/michaelgiba/survivor)
 
 
 A simpler example below:
@@ -53,10 +53,11 @@ llm_response = prompt_llm(
 plomp.write_html(plomp.buffer(), "progress.html")
 ```
 
-This would produce a self-contained HTML page which looks like this:
+<p align="center">
+    <img src="img/example-recording.gif" alt="Plomp UI Example">
+</p>
 
-![Plomp UI Example](img/example-recording.gif)
-
+This would produce a self-contained HTML page which looks like
 
 # Structure
 
@@ -69,6 +70,8 @@ Plomp revolves around a centralized buffer which stores three different types of
 
 
 # Installation
+
+Plomp only requires Python3.10+ and its only dependency is `typeguard`
 
 ```bash
 pip install plomp
