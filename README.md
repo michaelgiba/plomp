@@ -74,12 +74,9 @@ Plomp revolves around a centralized buffer which stores three different types of
 pip install plomp
 ```
 
-For development:
 
-```bash
-pip install plomp[dev]
-```
-
+# Developing
+To experiment locally with the UI you can run `cd frontend && npm run dev`. 
 
 # Contributions
 
