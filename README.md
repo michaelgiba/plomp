@@ -2,7 +2,7 @@
 
 A small python module for managing and debugging agent contexts.
 
-Just `plomp` it in and 'prompt' away
+Just `plomp` it in and *prompt* away!
 
 
 # Overview
@@ -74,9 +74,10 @@ Plomp revolves around a centralized buffer which stores three different types of
 pip install plomp
 ```
 
-
 # Developing
 To experiment locally with the UI you can run `cd frontend && npm run dev`. 
+
+Note the project is pretty new so if you see a bug please feel free to file an issue or make a PR.
 
 # Contributions
 
@@ -85,5 +86,5 @@ All contributions are welcome. There are a number of things that need to be adde
 2. More frontend features
 3. Better API documentation 
 4. Optional live progress reloading instead of only static HTML files for realtime playback
-5. + anything else valuable 
+5. Or anything else valuable 
 
