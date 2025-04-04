@@ -94,7 +94,6 @@ class PlompBufferQuery:
             tag_value = tags[filter_tag_key]
             for filter_value in filter_tag_values:
                 if isinstance(tag_value, dict) and isinstance(filter_value, dict):
-                    # Compare dictionaries by their contents
                     if tag_value == filter_value:
                         return True
                 elif tag_value == filter_value:

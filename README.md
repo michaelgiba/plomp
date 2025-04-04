@@ -2,12 +2,12 @@
 
 A small python module for managing and debugging agent contexts.
 
-Just 'plomp' it in and 'prompt' away
+Just `plomp` it in and 'prompt' away
 
 
 # Overview
 
-Plomp is designed to easily integrate into python programs which invoke an LLM over multiple 
+Plomp is a tiny library designed to easily integrate into python programs which invoke an LLM over multiple 
 steps and provide some useful benefits such as visualizing progress and making context retrival easier.
 
 Plomp has three main goals:
@@ -80,4 +80,13 @@ For development:
 pip install plomp[dev]
 ```
 
+
+# Contributions
+
+All contributions are welcome. There are a number of things that need to be added:
+1. Concurrency support
+2. More frontend features
+3. Better API documentation 
+4. Optional live progress reloading instead of only static HTML files for realtime playback
+5. + anything else valuable 
 

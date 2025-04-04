@@ -45,8 +45,23 @@ exclude-package-data = {"plomp" = ["**/node_modules", "**/frontend", "**/ts", "*
 packages = ["plomp"]
 
 
-[tool.poetry.packages]
-include = ["plomp"]
+[tool.poetry]
+name = "plomp"
+version = "0.1.2"
+description = "Plomp Python Module"
+authors = ["Michael Giba <michaelgiba@gmail.com>"]
+packages = [{include = "plomp"}]
+readme = "README.md"
+license = "MIT"
+
+[tool.poetry.dependencies]
+typeguard = "*"
+
+[tool.poetry.group.dev.dependencies]
+pytest = ">=6.0"
+pytest-cov = ">=2.12"
+ruff = ">=0.11.3"
+mypy = ">=0.950"
 
 [tool.poetry.build]
 script = "build_scripts/compile_frontend.py"
