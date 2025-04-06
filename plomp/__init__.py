@@ -16,7 +16,7 @@ from plomp._buffer_items import (
 )
 from plomp._query import PlompBufferQuery
 from plomp._types import TagsType
-from plomp._progress import write_html
+from plomp._progress import write_html, write_json
 
 
 class PlompMisconfiguration(Exception):
@@ -82,7 +82,7 @@ def _trace_decorator(
         )
         handle = record_prompt(prompt, tags=tags, buffer=buffer)
         result = fn(*args, **kwargs)
-        handle.complete(result)
+        handle.complete(str(result))
         return result
 
     return inner
@@ -244,6 +244,7 @@ __all__ = [
     "serve_buffer",
     "wrap_prompt_fn",
     "write_html",
+    "write_json",
 ]
 
 __version__ = "0.1.2"

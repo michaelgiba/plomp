@@ -3,6 +3,7 @@ import datetime as dt
 import pytest
 
 import plomp
+from typing import Any
 
 
 def mock_buffer(key: str):
@@ -281,6 +282,16 @@ def test_explicit_tags():
 
     answers = buffer.filter(tags_filter={"friend": "alice", "answer": 42}, how="any")
     assert len(answers) == 3
+
+
+def test_return_dict():
+    buffer = mock_buffer("test_return_dict")
+
+    @plomp.wrap_prompt_fn(buffer=buffer)
+    def prompt_fn(prompt: str, **kwargs) -> dict[str, Any]:
+        return {}
+
+    prompt_fn("return some json")
 
 
 def test_failures_of_wrapping():
