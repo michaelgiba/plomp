@@ -21,3 +21,10 @@ def write_html(buffer: PlompBuffer, output_uri: str):
 
     with open(output_uri, "w", encoding="utf-8") as f:
         f.write(html)
+
+
+def write_json(buffer: PlompBuffer, output_uri: str):
+    json_contents = buffer.to_dict()
+
+    with open(output_uri, "w", encoding="utf-8") as f:
+        json.dump(json_contents, f)
