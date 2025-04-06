@@ -82,7 +82,7 @@ def _trace_decorator(
         )
         handle = record_prompt(prompt, tags=tags, buffer=buffer)
         result = fn(*args, **kwargs)
-        handle.complete(result)
+        handle.complete(str(result))
         return result
 
     return inner
