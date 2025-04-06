@@ -2,7 +2,6 @@ import os
 import random
 import tempfile
 from datetime import datetime, timedelta
-import io
 import pytest
 
 import plomp
@@ -16,7 +15,6 @@ def temp_html_file():
     # Cleanup after test
     if os.path.exists(temp_file.name):
         os.remove(temp_file.name)
-
 
 
 def test_serialization(temp_html_file):
@@ -213,20 +211,22 @@ def test_readme_example(temp_html_file):
 
 def test_write_json(temp_html_file):
     buffer = plomp.buffer(key="test_json_serialization")
-    
-    handle = plomp.record_prompt("Test prompt", tags={"type": "json_test"}, buffer=buffer)
+
+    handle = plomp.record_prompt(
+        "Test prompt", tags={"type": "json_test"}, buffer=buffer
+    )
     handle.complete("Test response")
-    
+
     plomp.record_event(
         {
             "plomp_display_event_type": "test_event",
             "plomp_display_text": "Test event for JSON serialization",
-            "value": 123
+            "value": 123,
         },
         tags={"type": "json_test_event"},
-        buffer=buffer
+        buffer=buffer,
     )
-    
+
     with tempfile.NamedTemporaryFile() as f:
         plomp.write_json(buffer, f.name)
         content = json.load(f)
