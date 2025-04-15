@@ -227,8 +227,15 @@ def test_write_json(temp_html_file):
         buffer=buffer,
     )
 
+    new_buffer = plomp.buffer(key="test_json_serialization_after_read")
     with tempfile.NamedTemporaryFile() as f:
         plomp.write_json(buffer, f.name)
         content = json.load(f)
         assert isinstance(content["buffer_items"], list)
         assert len(content["buffer_items"]) == 2
+
+        plomp.read_json(new_buffer, f.name)
+        assert len(new_buffer) == 2
+
+        assert new_buffer[0].tags == buffer[0].tags
+        assert new_buffer[1].type_ == buffer[1].type_
