@@ -16,7 +16,7 @@ from plomp._buffer_items import (
 )
 from plomp._query import PlompBufferQuery
 from plomp._types import TagsType
-from plomp._progress import write_html, write_json
+from plomp._progress import write_html, write_json, read_json
 
 
 class PlompMisconfiguration(Exception):
@@ -28,10 +28,12 @@ def _shared_plomp_buffer(key: str | None) -> PlompBuffer:
     return PlompBuffer(key=key)
 
 
+@typechecked
 def buffer(*, key: str | None = None) -> PlompBuffer:
     return _shared_plomp_buffer(key)
 
 
+@typechecked
 def record_prompt(
     prompt: str,
     tags: TagsType | None = None,
@@ -44,18 +46,20 @@ def record_prompt(
     return buffer.record_prompt_start(prompt=prompt, tags=tags or dict())
 
 
+@typechecked
 def record_event(
     payload: dict,
     tags: TagsType | None = None,
     *,
     buffer: PlompBuffer | None = None,
-) -> PlompCallHandle:
+) -> None:
     if buffer is None:
         buffer = _shared_plomp_buffer(None)
 
     return buffer.record_event(payload=payload, tags=tags or dict())
 
 
+@typechecked
 def render(buffer: PlompBuffer | PlompBufferQuery, write_to: io.IOBase):
     for item in buffer:
         item.render(write_to, indent=0)
@@ -78,7 +82,10 @@ def _trace_decorator(
 
         prompt = capture_prompt(fn, *args, **kwargs)
         tags = capture_tags(
-            fn, *args, plomp_extra_tags=plomp_extra_tags or {}, **kwargs
+            fn,
+            *args,
+            plomp_extra_tags=plomp_extra_tags or {},
+            **kwargs,  # type: ignore
         )
         handle = record_prompt(prompt, tags=tags, buffer=buffer)
         result = fn(*args, **kwargs)
@@ -226,7 +233,7 @@ def wrap_prompt_fn(
     return partial(
         _trace_decorator,
         capture_prompt=capture_prompt,
-        capture_tags=capture_tags,
+        capture_tags=capture_tags,  # type: ignore
         buffer=buffer,
     )
 
@@ -241,10 +248,11 @@ __all__ = [
     "record_event",
     "record_prompt",
     "render",
+    "read_json",
     "serve_buffer",
     "wrap_prompt_fn",
     "write_html",
     "write_json",
 ]
 
-__version__ = "0.1.3"
+__version__ = "0.1.4"
